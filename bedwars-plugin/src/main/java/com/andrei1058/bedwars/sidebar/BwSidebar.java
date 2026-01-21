@@ -123,7 +123,7 @@ public class BwSidebar implements ISidebar {
     /**
      * Normalize lines where subject player is sidebar holder.
      */
-    @Contract(pure = true)
+@Contract(pure = true)
     public @NotNull LinkedList<SidebarLine> normalizeLines(@NotNull List<String> lineArray) {
         LinkedList<SidebarLine> lines = new LinkedList<>();
 
@@ -151,12 +151,10 @@ public class BwSidebar implements ISidebar {
                                 .replace("{TeamColor}", team.getColor().chat().toString())
                                 .replace("{TeamName}", teamName);
 
-                        if (line.contains("{TeamStatus}") && getAPI().getVersionSupport().getVersion() >= 10) {
-                            line = line.replace("{TeamStatus}", "");
-                            scoreLine = "{Team" + team.getName() + "Status}";
-                        } else {
-                            line = line.replace("{TeamStatus}", "{Team" + team.getName() + "Status}");
-                        }
+                        // FIX: Zawsze renderuj status jako tekst wewnątrz linii, 
+                        // zamiast przenosić go do scoreLine na nowszych wersjach.
+                        line = line.replace("{TeamStatus}", "{Team" + team.getName() + "Status}");
+                        
                     } else {
                         // skip line
                         continue;
