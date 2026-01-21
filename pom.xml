@@ -36,12 +36,13 @@
     </repositories>
 
     <dependencies>
-        <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-chat</artifactId>
-            <version>1.8-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+<dependency>
+    <groupId>net.md-5</groupId>
+    <artifactId>bungeecord-chat</artifactId>
+    <version>1.16-R0.4</version>
+    <scope>provided</scope>
+</dependency>
+
         <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
             <groupId>commons-io</groupId>
