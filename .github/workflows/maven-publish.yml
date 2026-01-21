@@ -15,24 +15,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Klonowanie repozytorium
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # Zaktualizowano do v4 dla lepszej wydajności
 
-      # Konfiguracja środowiska Java (JDK 21, zgodnie z Twoją konfiguracją)
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4 # Zaktualizowano do v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
-      # Budowanie projektu za pomocą Maven
       - name: Build with Maven
         run: mvn clean install --batch-mode
 
-      # Przesłanie gotowego pliku .jar jako artefakt (opcjonalnie)
+      # Zaktualizowana akcja do przesyłania artefaktów
       - name: Upload Plugin JAR
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # ZMIANA: v3 -> v4
         with:
           name: BedWars1058-Plugin
           path: bedwars-plugin/target/*.jar
+          if-no-files-found: error # Opcjonalne: rzuć błędem, jeśli nie znajdzie pliku .jar
