@@ -29,6 +29,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,6 +39,10 @@ public class TeamAssigner implements ITeamAssigner {
     private final LinkedList<Player> skip = new LinkedList<>();
 
     public void assignTeams(IArena arena) {
+
+        // Create a copy of teams list and shuffle it to randomize fill order
+        List<ITeam> shuffledTeams = new ArrayList<>(arena.getTeams());
+        Collections.shuffle(shuffledTeams);
 
         // team up parties first
         if (arena.getPlayers().size() > arena.getMaxInTeam() && arena.getMaxInTeam() > 1) {
@@ -56,7 +61,8 @@ public class TeamAssigner implements ITeamAssigner {
             // prioritize bigger teams
 
             if (!teams.isEmpty()) {
-                for (ITeam team : arena.getTeams()) {
+                // Iterate over shuffledTeams instead of arena.getTeams()
+                for (ITeam team : shuffledTeams) {
                     // sort
                     teams.sort(Comparator.comparingInt(List::size));
                     if (teams.get(0).isEmpty()) break;
@@ -80,7 +86,8 @@ public class TeamAssigner implements ITeamAssigner {
 
         for (Player remaining : arena.getPlayers()) {
             if (skip.contains(remaining)) continue;
-            for (ITeam team : arena.getTeams()) {
+            // Iterate over shuffledTeams instead of arena.getTeams()
+            for (ITeam team : shuffledTeams) {
                 if (team.getMembers().size() < arena.getMaxInTeam()) {
                     TeamAssignEvent e = new TeamAssignEvent(remaining, team, arena);
                     Bukkit.getPluginManager().callEvent(e);
