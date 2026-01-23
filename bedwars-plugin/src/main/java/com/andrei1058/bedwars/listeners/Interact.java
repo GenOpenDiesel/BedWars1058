@@ -70,8 +70,6 @@ public class Interact implements Listener {
 
     @EventHandler
     /* Handle custom items with commands on them */
-@EventHandler
-    /* Handle custom items with commands on them */
     public void onItemCommand(PlayerInteractEvent e) {
         if (e == null) return;
         Player p = e.getPlayer();
