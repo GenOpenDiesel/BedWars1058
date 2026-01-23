@@ -66,6 +66,46 @@ public class CmdJoin extends SubCommand {
             return true;
         }
         if (com.andrei1058.bedwars.commands.bedwars.MainCommand.isArenaGroup(args[0]) || args[0].contains("+")) {
+            
+            // --- POCZĄTEK ZMIANY: Losowanie, gdy wszystkie puste ---
+            List<IArena> candidates = new ArrayList<>();
+            String[] groupsRequested = args[0].split("\\+");
+
+            // Szukamy pasujących aren w trybie oczekiwania/startu
+            for (IArena a : Arena.getArenas()) {
+                if (a.getStatus() == com.andrei1058.bedwars.api.arena.GameState.waiting || a.getStatus() == com.andrei1058.bedwars.api.arena.GameState.starting) {
+                    for (String groupName : groupsRequested) {
+                        if (a.getGroup().equalsIgnoreCase(groupName)) {
+                            candidates.add(a);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Sprawdzamy czy wszystkie znalezione areny są puste
+            boolean allEmpty = true;
+            for (IArena a : candidates) {
+                if (!a.getPlayers().isEmpty()) {
+                    allEmpty = false;
+                    break;
+                }
+            }
+
+            // Jeśli wszystkie są puste i znaleziono jakąkolwiek arenę, wylosuj jedną
+            if (allEmpty && !candidates.isEmpty()) {
+                IArena randomArena = candidates.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(candidates.size()));
+                if (randomArena.addPlayer(p, false)) {
+                    Sounds.playSound("join-allowed", p);
+                } else {
+                    Sounds.playSound("join-denied", p);
+                    s.sendMessage(getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
+                }
+                return true;
+            }
+            // --- KONIEC ZMIANY ---
+
+            // Standardowe działanie (dołącza do aren z graczami priorytetowo lub pierwszej wolnej)
             if (!Arena.joinRandomFromGroup(p, args[0])) {
                 s.sendMessage(getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
                 Sounds.playSound("join-denied", p);
