@@ -21,7 +21,6 @@
 package com.andrei1058.bedwars.listeners;
 
 import com.andrei1058.bedwars.BedWars;
-import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena;
 import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.configuration.ConfigPath;
@@ -73,48 +72,14 @@ public class Interact implements Listener {
     public void onItemCommand(PlayerInteractEvent e) {
         if (e == null) return;
         Player p = e.getPlayer();
-        
-        // Obsługa kliknięcia Prawym (Blok lub Powietrze)
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_AIR) {
             ItemStack i = BedWars.nms.getItemInHand(p);
             if (!nms.isCustomBedWarsItem(i)) return;
-
-            // Split z limitem 2 jest kluczowy dla nazw grup z podłogą (_)
-            final String[] customData = nms.getCustomData(i).split("_", 2);
-
+            final String[] customData = nms.getCustomData(i).split("_");
             if (customData.length >= 2) {
                 if (customData[0].equals("RUNCOMMAND")) {
                     e.setCancelled(true);
                     Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(p, customData[1]));
-
-                } else if (customData[0].equals("REMATCH")) {
-                    e.setCancelled(true);
-                    String group = customData[1];
-                    
-                    // Logika szukania najlepszej areny
-                    IArena bestArena = null;
-                    int maxPlayers = -1;
-
-                    for (IArena a : Arena.getArenas()) {
-                        // Ignorujemy wielkość liter w nazwie grupy dla bezpieczeństwa
-                        if (a.getGroup().equalsIgnoreCase(group) && (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting)) {
-                            if (a.getPlayers().size() < a.getMaxPlayers()) {
-                                // Szukamy najbardziej zapełnionej areny (szybszy start)
-                                if (a.getPlayers().size() > maxPlayers) {
-                                    maxPlayers = a.getPlayers().size();
-                                    bestArena = a;
-                                }
-                            }
-                        }
-                    }
-
-                    if (bestArena != null) {
-                        final IArena arenaToJoin = bestArena;
-                        // Ważne: Dołączanie w nowym tasku, aby uniknąć konfliktów z eventem kliknięcia
-                        Bukkit.getScheduler().runTask(plugin, () -> arenaToJoin.addPlayer(p, true));
-                    } else {
-                        p.sendMessage(getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
-                    }
                 }
             }
         }
