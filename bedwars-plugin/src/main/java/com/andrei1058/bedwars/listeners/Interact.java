@@ -70,14 +70,18 @@ public class Interact implements Listener {
 
     @EventHandler
     /* Handle custom items with commands on them */
+@EventHandler
+    /* Handle custom items with commands on them */
     public void onItemCommand(PlayerInteractEvent e) {
         if (e == null) return;
         Player p = e.getPlayer();
+        
+        // Obsługa kliknięcia Prawym (Blok lub Powietrze)
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_AIR) {
             ItemStack i = BedWars.nms.getItemInHand(p);
             if (!nms.isCustomBedWarsItem(i)) return;
 
-            // Używamy limitu 2 przy splicie, aby poprawnie obsłużyć nazwy grup/komend zawierające "_"
+            // Split z limitem 2 jest kluczowy dla nazw grup z podłogą (_)
             final String[] customData = nms.getCustomData(i).split("_", 2);
 
             if (customData.length >= 2) {
@@ -86,18 +90,18 @@ public class Interact implements Listener {
                     Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(p, customData[1]));
 
                 } else if (customData[0].equals("REMATCH")) {
-                    // Obsługa logiki Rematch - dołącz do najbardziej zajętej areny
                     e.setCancelled(true);
                     String group = customData[1];
+                    
+                    // Logika szukania najlepszej areny
                     IArena bestArena = null;
                     int maxPlayers = -1;
 
                     for (IArena a : Arena.getArenas()) {
-                        // Sprawdzamy grupę oraz status (tylko oczekujące lub startujące)
-                        if (a.getGroup().equals(group) && (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting)) {
-                            // Sprawdzamy czy arena nie jest pełna
+                        // Ignorujemy wielkość liter w nazwie grupy dla bezpieczeństwa
+                        if (a.getGroup().equalsIgnoreCase(group) && (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting)) {
                             if (a.getPlayers().size() < a.getMaxPlayers()) {
-                                // Szukamy areny z największą liczbą graczy
+                                // Szukamy najbardziej zapełnionej areny (szybszy start)
                                 if (a.getPlayers().size() > maxPlayers) {
                                     maxPlayers = a.getPlayers().size();
                                     bestArena = a;
@@ -107,9 +111,10 @@ public class Interact implements Listener {
                     }
 
                     if (bestArena != null) {
-                        bestArena.addPlayer(p, true);
+                        final IArena arenaToJoin = bestArena;
+                        // Ważne: Dołączanie w nowym tasku, aby uniknąć konfliktów z eventem kliknięcia
+                        Bukkit.getScheduler().runTask(plugin, () -> arenaToJoin.addPlayer(p, true));
                     } else {
-                        // Wiadomość gdy nie znaleziono areny (używamy istniejącej w Messages)
                         p.sendMessage(getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
                     }
                 }
