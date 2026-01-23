@@ -209,17 +209,18 @@ public class Inventory implements Listener {
             }
         }
     }
-
-    /**
+/**
      * Check if an item is command-item
      */
     private static boolean isCommandItem(ItemStack i) {
         if (i == null) return false;
         if (i.getType() == Material.AIR) return false;
         if (nms.isCustomBedWarsItem(i)) {
-            String[] customData = nms.getCustomData(i).split("_");
+            // Używamy limitu 2, aby nie ucinać nazw grup z podłogami
+            String[] customData = nms.getCustomData(i).split("_", 2);
             if (customData.length >= 2) {
-                return customData[0].equals("RUNCOMMAND");
+                // FIX: Dodano obsługę REMATCH, aby blokowało przenoszenie/klikanie w GUI
+                return customData[0].equals("RUNCOMMAND") || customData[0].equals("REMATCH");
             }
         }
         return false;
