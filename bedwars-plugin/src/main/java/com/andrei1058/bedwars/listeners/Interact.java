@@ -76,11 +76,42 @@ public class Interact implements Listener {
         if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_AIR) {
             ItemStack i = BedWars.nms.getItemInHand(p);
             if (!nms.isCustomBedWarsItem(i)) return;
-            final String[] customData = nms.getCustomData(i).split("_");
+
+            // Używamy limitu 2 przy splicie, aby poprawnie obsłużyć nazwy grup/komend zawierające "_"
+            final String[] customData = nms.getCustomData(i).split("_", 2);
+
             if (customData.length >= 2) {
                 if (customData[0].equals("RUNCOMMAND")) {
                     e.setCancelled(true);
                     Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(p, customData[1]));
+
+                } else if (customData[0].equals("REMATCH")) {
+                    // Obsługa logiki Rematch - dołącz do najbardziej zajętej areny
+                    e.setCancelled(true);
+                    String group = customData[1];
+                    IArena bestArena = null;
+                    int maxPlayers = -1;
+
+                    for (IArena a : Arena.getArenas()) {
+                        // Sprawdzamy grupę oraz status (tylko oczekujące lub startujące)
+                        if (a.getGroup().equals(group) && (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting)) {
+                            // Sprawdzamy czy arena nie jest pełna
+                            if (a.getPlayers().size() < a.getMaxPlayers()) {
+                                // Szukamy areny z największą liczbą graczy
+                                if (a.getPlayers().size() > maxPlayers) {
+                                    maxPlayers = a.getPlayers().size();
+                                    bestArena = a;
+                                }
+                            }
+                        }
+                    }
+
+                    if (bestArena != null) {
+                        bestArena.addPlayer(p, true);
+                    } else {
+                        // Wiadomość gdy nie znaleziono areny (używamy istniejącej w Messages)
+                        p.sendMessage(getMsg(p, Messages.COMMAND_JOIN_NO_EMPTY_FOUND));
+                    }
                 }
             }
         }
@@ -292,52 +323,7 @@ public class Interact implements Listener {
             e.setCancelled(true);
         }
     }
-public void onItemCommand(PlayerInteractEvent e) {
-        if (e == null) return;
-        Player p = e.getPlayer();
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK || e.getAction() == Action.RIGHT_CLICK_AIR) {
-            ItemStack i = BedWars.nms.getItemInHand(p);
-            if (!nms.isCustomBedWarsItem(i)) return;
-            
-            // Używamy limitu 2 przy splicie, aby poprawnie obsłużyć nazwy grup/komend zawierające "_"
-            final String[] customData = nms.getCustomData(i).split("_", 2);
-            
-            if (customData.length >= 2) {
-                if (customData[0].equals("RUNCOMMAND")) {
-                    e.setCancelled(true);
-                    Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(p, customData[1]));
-                    
-                } else if (customData[0].equals("REMATCH")) {
-                    // Obsługa logiki Rematch - dołącz do najbardziej zajętej areny
-                    e.setCancelled(true);
-                    String group = customData[1];
-                    IArena bestArena = null;
-                    int maxPlayers = -1;
 
-                    for (IArena a : Arena.getArenas()) {
-                        // Sprawdzamy grupę oraz status (tylko oczekujące lub startujące)
-                        if (a.getGroup().equals(group) && (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting)) {
-                            // Sprawdzamy czy arena nie jest pełna
-                            if (a.getPlayers().size() < a.getMaxPlayers()) {
-                                // Szukamy areny z największą liczbą graczy
-                                if (a.getPlayers().size() > maxPlayers) {
-                                    maxPlayers = a.getPlayers().size();
-                                    bestArena = a;
-                                }
-                            }
-                        }
-                    }
-
-                    if (bestArena != null) {
-                        bestArena.addPlayer(p, true);
-                    } else {
-                        // Wiadomość gdy nie znaleziono areny (można dostosować)
-                        p.sendMessage(getMsg(p, Messages.ARENA_JOIN_NO_ARENAS_FOUND));
-                    }
-                }
-            }
-        }
-    }
     @EventHandler
     public void onCrafting(PrepareItemCraftEvent e) {
         if (e == null) return;
