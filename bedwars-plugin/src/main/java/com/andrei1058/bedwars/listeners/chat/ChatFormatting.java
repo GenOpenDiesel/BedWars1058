@@ -60,7 +60,20 @@ public class ChatFormatting implements Listener {
 
         // handle chat color. we would need to work on permission inheritance
         if (Permissions.hasPermission(p, Permissions.PERMISSION_CHAT_COLOR, Permissions.PERMISSION_VIP, Permissions.PERMISSION_ALL)) {
-            e.setMessage(ChatColor.translateAlternateColorCodes('&', e.getMessage()));
+            String msg = e.getMessage();
+
+            // Obsługa kolorów HEX w formacie &#RRGGBB
+            try {
+                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("&#[a-fA-F0-9]{6}").matcher(msg);
+                while (matcher.find()) {
+                    String hexCode = matcher.group();
+                    msg = msg.replace(hexCode, net.md_5.bungee.api.ChatColor.of(hexCode.substring(1)).toString());
+                }
+            } catch (NoSuchMethodError | Exception ignored) {
+                // Ignorujemy błędy na starszych wersjach serwera (poniżej 1.16)
+            }
+
+            e.setMessage(ChatColor.translateAlternateColorCodes('&', msg));
         }
 
         Language language = getPlayerLanguage(p);
