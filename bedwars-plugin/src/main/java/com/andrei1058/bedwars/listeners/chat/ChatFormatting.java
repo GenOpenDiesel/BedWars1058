@@ -40,6 +40,8 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.andrei1058.bedwars.BedWars.*;
 import static com.andrei1058.bedwars.api.language.Language.getMsg;
@@ -60,24 +62,8 @@ public class ChatFormatting implements Listener {
 
         // handle chat color. we would need to work on permission inheritance
         if (Permissions.hasPermission(p, Permissions.PERMISSION_CHAT_COLOR, Permissions.PERMISSION_VIP, Permissions.PERMISSION_ALL)) {
-            String msg = e.getMessage();
-
-            // Obsługa kolorów HEX w formacie &#RRGGBB
-            try {
-                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("&#[a-fA-F0-9]{6}").matcher(msg);
-                while (matcher.find()) {
-                    String hexCode = matcher.group();
-                    // Użycie refleksji, aby uniknąć błędu kompilacji "cannot find symbol"
-                    // na starszych wersjach API (np. przy budowaniu na Spigot 1.8.8)
-                    java.lang.reflect.Method ofMethod = net.md_5.bungee.api.ChatColor.class.getMethod("of", String.class);
-                    String color = ofMethod.invoke(null, hexCode.substring(1)).toString();
-                    msg = msg.replace(hexCode, color);
-                }
-            } catch (Exception ignored) {
-                // Ignorujemy błędy (np. brak metody na starszych wersjach serwera poniżej 1.16)
-            }
-
-            e.setMessage(ChatColor.translateAlternateColorCodes('&', msg));
+            // Zmiana: użycie metody translate() dla obsługi HEX
+            e.setMessage(translate(e.getMessage()));
         }
 
         Language language = getPlayerLanguage(p);
@@ -146,6 +132,26 @@ public class ChatFormatting implements Listener {
 
         // multi arena lobby chat
         e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_LOBBY), p, null));
+    }
+
+    /**
+     * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB).
+     */
+    private String translate(String message) {
+        // Obsługa HEX dla wersji 1.16+
+        try {
+            Pattern pattern = Pattern.compile("&#([A-Fa-f0-9]{6})");
+            Matcher matcher = pattern.matcher(message);
+            while (matcher.find()) {
+                String color = matcher.group(1);
+                // Używamy w pełni kwalifikowanej nazwy, aby uniknąć konfliktów z org.bukkit.ChatColor
+                message = message.replace("&#" + color, net.md_5.bungee.api.ChatColor.of("#" + color).toString());
+                matcher = pattern.matcher(message);
+            }
+        } catch (NoClassDefFoundError | NoSuchMethodError | Exception ignored) {
+            // Ignorujemy błędy na starszych wersjach serwera (poniżej 1.16), gdzie ChatColor.of nie istnieje
+        }
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 
     private static String parsePHolders(String content, Player player, @Nullable ITeam team) {
