@@ -137,6 +137,9 @@ public class ChatFormatting implements Listener {
     /**
      * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB).
      */
+/**
+     * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB).
+     */
     private String translate(String message) {
         // Obsługa HEX dla wersji 1.16+
         try {
@@ -144,15 +147,21 @@ public class ChatFormatting implements Listener {
             Matcher matcher = pattern.matcher(message);
             while (matcher.find()) {
                 String color = matcher.group(1);
-                // Używamy w pełni kwalifikowanej nazwy, aby uniknąć konfliktów z org.bukkit.ChatColor
-                message = message.replace("&#" + color, net.md_5.bungee.api.ChatColor.of("#" + color).toString());
+                
+                // ZMIANA: Używamy refleksji, aby kod kompilował się na API 1.8.8,
+                // ale pobierał metodę 'of' dynamicznie na serwerach 1.16+
+                Object colorObj = net.md_5.bungee.api.ChatColor.class
+                        .getMethod("of", String.class)
+                        .invoke(null, "#" + color);
+                
+                message = message.replace("&#" + color, colorObj.toString());
                 matcher = pattern.matcher(message);
             }
-        } catch (NoClassDefFoundError | NoSuchMethodError | Exception ignored) {
-            // Ignorujemy błędy na starszych wersjach serwera (poniżej 1.16), gdzie ChatColor.of nie istnieje
+        } catch (Exception ignored) {
+            // Ignorujemy błędy, jeśli metoda nie istnieje (starsze wersje serwera lub brak metody w API)
         }
         return ChatColor.translateAlternateColorCodes('&', message);
-    }
+    }}
 
     private static String parsePHolders(String content, Player player, @Nullable ITeam team) {
         content = content
