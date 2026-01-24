@@ -67,10 +67,14 @@ public class ChatFormatting implements Listener {
                 java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("&#[a-fA-F0-9]{6}").matcher(msg);
                 while (matcher.find()) {
                     String hexCode = matcher.group();
-                    msg = msg.replace(hexCode, net.md_5.bungee.api.ChatColor.of(hexCode.substring(1)).toString());
+                    // Użycie refleksji, aby uniknąć błędu kompilacji "cannot find symbol"
+                    // na starszych wersjach API (np. przy budowaniu na Spigot 1.8.8)
+                    java.lang.reflect.Method ofMethod = net.md_5.bungee.api.ChatColor.class.getMethod("of", String.class);
+                    String color = ofMethod.invoke(null, hexCode.substring(1)).toString();
+                    msg = msg.replace(hexCode, color);
                 }
-            } catch (NoSuchMethodError | Exception ignored) {
-                // Ignorujemy błędy na starszych wersjach serwera (poniżej 1.16)
+            } catch (Exception ignored) {
+                // Ignorujemy błędy (np. brak metody na starszych wersjach serwera poniżej 1.16)
             }
 
             e.setMessage(ChatColor.translateAlternateColorCodes('&', msg));
