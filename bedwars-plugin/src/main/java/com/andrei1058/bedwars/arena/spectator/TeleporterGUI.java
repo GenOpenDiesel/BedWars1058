@@ -26,6 +26,7 @@ import com.andrei1058.bedwars.api.arena.team.ITeam;
 import com.andrei1058.bedwars.api.language.Language;
 import com.andrei1058.bedwars.api.language.Messages;
 import com.andrei1058.bedwars.arena.Arena;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -37,6 +38,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.andrei1058.bedwars.BedWars.nms;
 import static com.andrei1058.bedwars.api.language.Language.getList;
@@ -47,6 +50,8 @@ public class TeleporterGUI {
 
     //Don't remove "_" because it's used as a separator somewhere
     public static final String NBT_SPECTATOR_TELEPORTER_GUI_HEAD = "spectatorTeleporterGUIhead_";
+    // Pattern for HEX colors: &#RRGGBB
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     private static HashMap<Player, Inventory> refresh = new HashMap<>();
 
@@ -116,17 +121,23 @@ public class TeleporterGUI {
         IArena currentArena = Arena.getArenaByPlayer(targetPlayer);
         ITeam targetPlayerTeam = currentArena.getTeam(targetPlayer);
 
-        im.setDisplayName(getMsg(GUIholder, Messages.ARENA_SPECTATOR_TELEPORTER_GUI_HEAD_NAME)
+        // Fetch display name with placeholders replaced
+        String displayName = getMsg(GUIholder, Messages.ARENA_SPECTATOR_TELEPORTER_GUI_HEAD_NAME)
                 .replace("{vPrefix}", BedWars.getChatSupport().getPrefix(targetPlayer))
                 .replace("{vSuffix}", BedWars.getChatSupport().getSuffix(targetPlayer))
                 .replace("{team}", targetPlayerTeam.getDisplayName(Language.getPlayerLanguage(GUIholder)))
                 .replace("{teamColor}", String.valueOf(targetPlayerTeam.getColor().chat()))
                 .replace("{player}", targetPlayer.getDisplayName())
-                .replace("{playername}", targetPlayer.getName()));
+                .replace("{playername}", targetPlayer.getName());
+
+        // Apply HEX color translation to the final string
+        im.setDisplayName(colorize(displayName));
+
         List<String> lore = new ArrayList<>();
         String health = String.valueOf((int)targetPlayer.getHealth() * 100 / targetPlayer.getHealthScale());
         for (String s : getList(GUIholder, Messages.ARENA_SPECTATOR_TELEPORTER_GUI_HEAD_LORE)) {
-            lore.add(s.replace("{health}", health).replace("{food}", String.valueOf(targetPlayer.getFoodLevel())));
+            // Apply replacements and then colorize
+            lore.add(colorize(s.replace("{health}", health).replace("{food}", String.valueOf(targetPlayer.getFoodLevel()))));
         }
         im.setLore(lore);
         i.setItemMeta(im);
@@ -141,5 +152,23 @@ public class TeleporterGUI {
             refresh.remove(p);
             p.closeInventory();
         }
+    }
+
+    /**
+     * Translate HEX colors and standard codes
+     */
+    private static String colorize(String message) {
+        // Only run HEX logic on 1.16+
+        try {
+            Matcher matcher = HEX_PATTERN.matcher(message);
+            while (matcher.find()) {
+                String hexCode = matcher.group(1);
+                String replacement = ChatColor.of("#" + hexCode).toString();
+                message = message.replace("&#" + hexCode, replacement);
+            }
+        } catch (NoSuchMethodError | Exception ignored) {
+            // Fallback for older versions (pre 1.16)
+        }
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }
