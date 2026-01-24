@@ -51,10 +51,12 @@ public class WithChat implements Chat {
             Matcher matcher = HEX_PATTERN.matcher(message);
             while (matcher.find()) {
                 String hexCode = matcher.group(1);
-                String replacement = ChatColor.of("#" + hexCode).toString();
+                // Use reflection to fix compilation on older APIs that are missing ChatColor.of()
+                java.lang.reflect.Method ofMethod = ChatColor.class.getMethod("of", String.class);
+                String replacement = ofMethod.invoke(null, "#" + hexCode).toString();
                 message = message.replace("&#" + hexCode, replacement);
             }
-        } catch (NoSuchMethodError | Exception ignored) {
+        } catch (Exception ignored) {
             // Fallback for versions older than 1.16 where ChatColor.of doesn't exist
         }
         return ChatColor.translateAlternateColorCodes('&', message);
