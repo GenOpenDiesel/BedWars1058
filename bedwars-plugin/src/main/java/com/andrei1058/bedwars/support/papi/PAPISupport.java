@@ -207,6 +207,11 @@ public class PAPISupport extends PlaceholderExpansion {
             case "player_rerq_xp_formatted":
                 response = BedWars.getLevelSupport().getRequiredXpFormatted(player);
                 break;
+            case "current_arena_name":
+    if (a != null) {
+        response = a.getArenaName();
+    }
+    break;
             case "player_rerq_xp":
                 response = String.valueOf(BedWars.getLevelSupport().getRequiredXp(player));
                 break;
