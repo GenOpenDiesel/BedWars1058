@@ -61,6 +61,7 @@ public class ChatFormatting implements Listener {
         }
 
         // handle chat color. we would need to work on permission inheritance
+        // WAŻNE: Upewnij się, że masz uprawnienie bw.chat.color lub OP, inaczej kod HEX nie zostanie przetworzony!
         if (Permissions.hasPermission(p, Permissions.PERMISSION_CHAT_COLOR, Permissions.PERMISSION_VIP, Permissions.PERMISSION_ALL)) {
             // Zmiana: użycie metody translate() dla obsługi HEX
             e.setMessage(translate(e.getMessage()));
@@ -135,27 +136,29 @@ public class ChatFormatting implements Listener {
     }
 
     /**
-     * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB).
+     * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB oraz #RRGGBB).
      */
     private String translate(String message) {
         // Obsługa HEX dla wersji 1.16+
         try {
-            Pattern pattern = Pattern.compile("&#([A-Fa-f0-9]{6})");
+            // ZMIANA: Regex teraz łapie zarówno &#RRGGBB jak i #RRGGBB
+            Pattern pattern = Pattern.compile("(&#|#)([A-Fa-f0-9]{6})");
             Matcher matcher = pattern.matcher(message);
             while (matcher.find()) {
-                String color = matcher.group(1);
+                String fullMatch = matcher.group();   // np. #FF0000 lub &#FF0000
+                String colorCode = matcher.group(2);  // np. FF0000
 
-                // ZMIANA: Używamy refleksji, aby kod kompilował się na API 1.8.8,
+                // Używamy refleksji, aby kod kompilował się na API 1.8.8,
                 // ale pobierał metodę 'of' dynamicznie na serwerach 1.16+
                 Object colorObj = net.md_5.bungee.api.ChatColor.class
                         .getMethod("of", String.class)
-                        .invoke(null, "#" + color);
+                        .invoke(null, "#" + colorCode);
 
-                message = message.replace("&#" + color, colorObj.toString());
+                message = message.replace(fullMatch, colorObj.toString());
                 matcher = pattern.matcher(message);
             }
         } catch (Exception ignored) {
-            // Ignorujemy błędy, jeśli metoda nie istnieje (starsze wersje serwera lub brak metody w API)
+            // Ignorujemy błędy na starszych wersjach serwera (poniżej 1.16)
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }
