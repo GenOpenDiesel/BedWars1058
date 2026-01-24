@@ -60,10 +60,8 @@ public class ChatFormatting implements Listener {
             return;
         }
 
-        // handle chat color. we would need to work on permission inheritance
-        // WAŻNE: Upewnij się, że masz uprawnienie bw.chat.color lub OP, inaczej kod HEX nie zostanie przetworzony!
+        // handle chat color for the MESSAGE content
         if (Permissions.hasPermission(p, Permissions.PERMISSION_CHAT_COLOR, Permissions.PERMISSION_VIP, Permissions.PERMISSION_ALL)) {
-            // Zmiana: użycie metody translate() dla obsługi HEX
             e.setMessage(translate(e.getMessage()));
         }
 
@@ -137,11 +135,12 @@ public class ChatFormatting implements Listener {
 
     /**
      * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB oraz #RRGGBB).
+     * Metoda jest static, aby można jej było użyć w parsePHolders.
      */
-    private String translate(String message) {
+    public static String translate(String message) {
         // Obsługa HEX dla wersji 1.16+
         try {
-            // ZMIANA: Regex teraz łapie zarówno &#RRGGBB jak i #RRGGBB
+            // Regex łapie zarówno &#RRGGBB jak i #RRGGBB
             Pattern pattern = Pattern.compile("(&#|#)([A-Fa-f0-9]{6})");
             Matcher matcher = pattern.matcher(message);
             while (matcher.find()) {
@@ -164,19 +163,30 @@ public class ChatFormatting implements Listener {
     }
 
     private static String parsePHolders(String content, Player player, @Nullable ITeam team) {
+        // Wstawianie zmiennych (prefixy, suffixy mogą zawierać kolory HEX!)
         content = content
                 .replace("{vPrefix}", getChatSupport().getPrefix(player))
                 .replace("{vSuffix}", getChatSupport().getSuffix(player))
                 .replace("{playername}", player.getName())
                 .replace("{level}", getLevelSupport().getLevel(player))
                 .replace("{player}", player.getDisplayName());
+        
         if (team != null) {
             String teamFormat = getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_TEAM)
                     .replace("{TeamColor}", team.getColor().chat() + "")
                     .replace("{TeamName}", team.getDisplayName(Language.getPlayerLanguage(player)).toUpperCase());
             content = content.replace("{team}", teamFormat);
         }
-        return SupportPAPI.getSupportPAPI().replace(player, content).replace("{message}", "%2$s");
+
+        // Obsługa PlaceholderAPI
+        String processed = SupportPAPI.getSupportPAPI().replace(player, content);
+
+        // KLUCZOWA POPRAWKA: Tłumaczenie kolorów w CAŁYM formacie (prefixy, ranga itp.)
+        // Wcześniej tłumaczone było tylko e.getMessage(), a format pozostawał "surowy"
+        processed = translate(processed);
+
+        // Na końcu wstawiamy placeholder wiadomości (która jest już pokolorowana w onChat)
+        return processed.replace("{message}", "%2$s");
     }
 
     private static boolean isShouting(String msg, Language lang) {
