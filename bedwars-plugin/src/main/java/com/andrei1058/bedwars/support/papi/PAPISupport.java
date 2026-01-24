@@ -239,15 +239,15 @@ public class PAPISupport extends PlaceholderExpansion {
                     response = a.getGroup();
                 }
                 break;
-            case "elapsed_time":
+case "elapsed_time":
                 if (a != null) {
                     Instant startTime = a.getStartTime();
                     if (null != startTime){
                         Duration time = Duration.ofMillis(Instant.now().minusMillis(startTime.toEpochMilli()).toEpochMilli());
                         if (time.toHours() == 0){
-                            response = String.format("%02d:%02d", time.toMinutes(), time.toSeconds());
+                            response = String.format("%02d:%02d", time.toMinutes(), time.getSeconds() % 60);
                         } else {
-                            response = String.format("%02d:%02d:%02d", time.toHours(), time.toMinutes(), time.toSeconds());
+                            response = String.format("%02d:%02d:%02d", time.toHours(), time.toMinutes() % 60, time.getSeconds() % 60);
                         }
                     } else response = "";
                 }
