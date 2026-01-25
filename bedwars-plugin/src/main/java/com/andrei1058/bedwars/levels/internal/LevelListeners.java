@@ -78,7 +78,15 @@ public class LevelListeners implements Listener {
             if (PlayerLevel.getLevelByPlayer(p) != null) {
                 Player p1 = Bukkit.getPlayer(p);
                 if (p1 == null) continue;
-                int xpAmount = LevelsConfig.levels.getInt("xp-rewards.game-win");
+double multiplier = 1.0;
+if (p1.hasPermission("bedwars.multiplier.vip")) {
+    multiplier = 1.5;
+} else if (p1.hasPermission("bedwars.multiplier.svip")) {
+    multiplier = 2.0;
+}
+
+int xpAmountBase = LevelsConfig.levels.getInt("xp-rewards.game-win");
+int xpAmount = (int) (xpAmountBase * multiplier);
                 if (xpAmount > 0){
                     PlayerLevel.getLevelByPlayer(p).addXp(xpAmount, PlayerXpGainEvent.XpSource.GAME_WIN);
                     p1.sendMessage(Language.getMsg(p1, Messages.XP_REWARD_WIN).replace("{xp}", String.valueOf(xpAmount)));
