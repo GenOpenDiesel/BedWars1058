@@ -26,7 +26,16 @@ public class MoneyListeners implements Listener {
         for (UUID p : e.getWinners()) {
             Player player = Bukkit.getPlayer(p);
             if (player == null) continue;
-            int gameWin = MoneyConfig.money.getInt("money-rewards.game-win");
+double multiplier = 1.0;
+if (player.hasPermission("bedwars.multiplier.vip")) {
+    multiplier = 1.5; // 50% więcej
+} else if (player.hasPermission("bedwars.multiplier.svip")) {
+    multiplier = 2.0; // 100% więcej
+}
+
+int gameWinBase = MoneyConfig.money.getInt("money-rewards.game-win");
+// Obliczenie końcowej nagrody
+int gameWin = (int) (gameWinBase * multiplier);
             if (gameWin > 0) {
                 BedWars.getEconomy().giveMoney(player, gameWin);
                 player.sendMessage(Language.getMsg(player, Messages.MONEY_REWARD_WIN).replace("{money}", String.valueOf(gameWin)));
