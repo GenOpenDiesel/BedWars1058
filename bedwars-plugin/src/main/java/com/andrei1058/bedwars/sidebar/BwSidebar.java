@@ -604,6 +604,9 @@ public class BwSidebar implements ISidebar {
     public void setHeaderFooter(@Nullable TabHeaderFooter headerFooter) {
         this.headerFooter = headerFooter;
     }
+    public void setTopStatistics(@Nullable StatisticsOrdered topStatistics) {
+        this.topStatistics = topStatistics;
+    }
 private String colorize(String text) {
         if (text == null) return "";
         // Wzorzec dla kolorów HEX w formacie &#RRGGBB
