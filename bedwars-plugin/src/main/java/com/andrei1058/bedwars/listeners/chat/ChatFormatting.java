@@ -72,76 +72,78 @@ public class ChatFormatting implements Listener {
             setRecipients(e, p.getWorld().getPlayers());
         }
 
-// handle arena chat
-            if (Arena.getArenaByPlayer(p) != null) {
-                IArena a = Arena.getArenaByPlayer(p);
+        // handle arena chat
+        if (Arena.getArenaByPlayer(p) != null) {
+            IArena a = Arena.getArenaByPlayer(p);
 
-                // Czat dla obserwatorów (spectators)
-                if (a.isSpectator(p)) {
-                    setRecipients(e, a.getSpectators());
-                    e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_SPECTATOR), p, null));
-                    return;
-                }
-
-                // Czat w lobby oczekiwania (waiting/starting)
-                if (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting) {
-                    setRecipients(e, a.getPlayers());
-                    e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_WAITING), p, null));
-                    return;
-                }
-
-                ITeam team = a.getTeam(p);
-                String msg = e.getMessage();
-
-                // --- LOGIKA KRZYKU (SHOUT) ---
-                // Jeśli wiadomość zaczyna się od "!" (lub "shout"), widzą ją wszyscy
-                if (isShouting(msg, language)) {
-                    // Sprawdzenie uprawnień
-                    if (!(p.hasPermission(Permissions.PERMISSION_SHOUT_COMMAND) || p.hasPermission(Permissions.PERMISSION_ALL))) {
-                        e.setCancelled(true);
-                        p.sendMessage(Language.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
-                        return;
-                    }
-                    // Sprawdzenie cooldownu
-                    if (ShoutCommand.isShoutCooldown(p)) {
-                        e.setCancelled(true);
-                        p.sendMessage(language.m(Messages.COMMAND_COOLDOWN)
-                                .replace("{seconds}", String.valueOf(Math.round(ShoutCommand.getShoutCooldown(p))))
-                        );
-                        return;
-                    }
-                    
-                    ShoutCommand.updateShout(p);
-                    
-                    // Ustawiamy odbiorców na WSZYSTKICH (gracze + obserwatorzy)
-                    setRecipients(e, a.getPlayers(), a.getSpectators());
-                    
-                    // Usuwamy prefix "!" z wiadomości
-                    msg = clearShout(msg, language);
-                    if (msg.isEmpty()) {
-                        e.setCancelled(true);
-                        return;
-                    }
-                    e.setMessage(msg);
-                    e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_SHOUT), p, team));
-                    return;
-                }
-
-                // --- LOGIKA CZATU DRUŻYNOWEGO ---
-                // Jeśli wiadomość NIE jest krzykiem, widzi ją tylko drużyna
-                
-                // Wyjątek dla trybu Solo (1 osoba w teamie) - tam czat zwykły widzą wszyscy
-                // (Jeśli chcesz, aby w Solo też trzeba było krzyczeć, usuń ten warunek if i zostaw tylko else)
-                if (a.getMaxInTeam() == 1) {
-                    setRecipients(e, a.getPlayers(), a.getSpectators());
-                } else {
-                    // W trybach drużynowych (Doubles, 3v3, 4v4) widzą tylko członkowie Twojego teamu
-                    setRecipients(e, team.getMembers());
-                }
-                
-                e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_TEAM), p, team));
+            // Czat dla obserwatorów (spectators)
+            if (a.isSpectator(p)) {
+                setRecipients(e, a.getSpectators());
+                e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_SPECTATOR), p, null));
                 return;
             }
+
+            // Czat w lobby oczekiwania (waiting/starting)
+            if (a.getStatus() == GameState.waiting || a.getStatus() == GameState.starting) {
+                setRecipients(e, a.getPlayers());
+                e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_WAITING), p, null));
+                return;
+            }
+
+            ITeam team = a.getTeam(p);
+            String msg = e.getMessage();
+
+            // --- LOGIKA KRZYKU (SHOUT) ---
+            // Jeśli wiadomość zaczyna się od "!" (lub "shout"), widzą ją wszyscy
+            if (isShouting(msg, language)) {
+                // Sprawdzenie uprawnień
+                if (!(p.hasPermission(Permissions.PERMISSION_SHOUT_COMMAND) || p.hasPermission(Permissions.PERMISSION_ALL))) {
+                    e.setCancelled(true);
+                    p.sendMessage(Language.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
+                    return;
+                }
+                // Sprawdzenie cooldownu
+                if (ShoutCommand.isShoutCooldown(p)) {
+                    e.setCancelled(true);
+                    p.sendMessage(language.m(Messages.COMMAND_COOLDOWN)
+                            .replace("{seconds}", String.valueOf(Math.round(ShoutCommand.getShoutCooldown(p))))
+                    );
+                    return;
+                }
+
+                ShoutCommand.updateShout(p);
+
+                // Ustawiamy odbiorców na WSZYSTKICH (gracze + obserwatorzy)
+                setRecipients(e, a.getPlayers(), a.getSpectators());
+
+                // Usuwamy prefix "!" z wiadomości
+                msg = clearShout(msg, language);
+                if (msg.isEmpty()) {
+                    e.setCancelled(true);
+                    return;
+                }
+                e.setMessage(msg);
+                e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_SHOUT), p, team));
+                return;
+            }
+
+            // --- LOGIKA CZATU DRUŻYNOWEGO ---
+            // Jeśli wiadomość NIE jest krzykiem, widzi ją tylko drużyna
+
+            // Wyjątek dla trybu Solo (1 osoba w teamie) - tam czat zwykły widzą wszyscy
+            // (Jeśli chcesz, aby w Solo też trzeba było krzyczeć, usuń ten warunek if i zostaw tylko else)
+            if (a.getMaxInTeam() == 1) {
+                setRecipients(e, a.getPlayers(), a.getSpectators());
+            } else {
+                // W trybach drużynowych (Doubles, 3v3, 4v4) widzą tylko członkowie Twojego teamu
+                setRecipients(e, team.getMembers());
+            }
+
+            e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_TEAM), p, team));
+            return;
+        }
+    } // <--- Dodano brakującą klamrę zamykającą metodę onChat
+
     /**
      * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB oraz #RRGGBB).
      * Metoda jest static, aby można jej było użyć w parsePHolders.
@@ -179,7 +181,7 @@ public class ChatFormatting implements Listener {
                 .replace("{playername}", player.getName())
                 .replace("{level}", getLevelSupport().getLevel(player))
                 .replace("{player}", player.getDisplayName());
-        
+
         if (team != null) {
             String teamFormat = getMsg(player, Messages.FORMAT_PAPI_PLAYER_TEAM_TEAM)
                     .replace("{TeamColor}", team.getColor().chat() + "")
