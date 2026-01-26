@@ -120,10 +120,10 @@ public class BwSidebar implements ISidebar {
                 new SidebarLineAnimated(data);
     }
 
-    /**
+  /**
      * Normalize lines where subject player is sidebar holder.
      */
-@Contract(pure = true)
+    @Contract(pure = true)
     public @NotNull LinkedList<SidebarLine> normalizeLines(@NotNull List<String> lineArray) {
         LinkedList<SidebarLine> lines = new LinkedList<>();
 
@@ -151,8 +151,7 @@ public class BwSidebar implements ISidebar {
                                 .replace("{TeamColor}", team.getColor().chat().toString())
                                 .replace("{TeamName}", teamName);
 
-                        // FIX: Zawsze renderuj status jako tekst wewnątrz linii, 
-                        // zamiast przenosić go do scoreLine na nowszych wersjach.
+                        // FIX: Zawsze renderuj status jako tekst wewnątrz linii
                         line = line.replace("{TeamStatus}", "{Team" + team.getName() + "Status}");
                         
                     } else {
@@ -216,6 +215,9 @@ public class BwSidebar implements ISidebar {
                     .replace("{version}", plugin.getDescription().getVersion())
                     .replace("{server}", config.getString(ConfigPath.GENERAL_CONFIGURATION_BUNGEE_OPTION_SERVER_ID))
             ;
+            
+            // ZMIANA: Dodano obsługę kolorów HEX dla całej linii przed podziałem
+            line = colorize(line);
 
             // Add the line to the sidebar
             String finalTemp = line;
@@ -246,7 +248,7 @@ public class BwSidebar implements ISidebar {
         return tabList.isTabFormattingDisabled();
     }
 
-    /**
+/**
      * Get placeholders for given player.
      *
      * @param player subject.
@@ -255,9 +257,11 @@ public class BwSidebar implements ISidebar {
     @Contract(pure = true)
     @NotNull ConcurrentLinkedQueue<PlaceholderProvider> getPlaceholders(@NotNull Player player) {
         ConcurrentLinkedQueue<PlaceholderProvider> providers = new ConcurrentLinkedQueue<>();
-        providers.add(new PlaceholderProvider("{player}", player::getDisplayName));
+        // ZMIANA: Dodano colorize() do wyświetlania nazw graczy, aby obsłużyć HEX
+        providers.add(new PlaceholderProvider("{player}", () -> colorize(player.getDisplayName())));
         providers.add(new PlaceholderProvider("{money}", () -> String.valueOf(getEconomy().getMoney(player))));
-        providers.add(new PlaceholderProvider("{playerName}", player::getCustomName));
+        // ZMIANA: Dodano colorize() do customName
+        providers.add(new PlaceholderProvider("{playerName}", () -> colorize(player.getCustomName())));
         providers.add(new PlaceholderProvider("{date}", () -> dateFormat.format(new Date(System.currentTimeMillis()))));
         // fixme 29/08/2023: disabled for now because this is not a dynamic placeholder. Let's see what's the impact.
 //        providers.add(new PlaceholderProvider("{serverIp}", () -> BedWars.config.getString(ConfigPath.GENERAL_CONFIG_PLACEHOLDERS_REPLACEMENTS_SERVER_IP)));
@@ -600,7 +604,24 @@ public class BwSidebar implements ISidebar {
     public void setHeaderFooter(@Nullable TabHeaderFooter headerFooter) {
         this.headerFooter = headerFooter;
     }
-
+private String colorize(String text) {
+        if (text == null) return "";
+        // Wzorzec dla kolorów HEX w formacie &#RRGGBB
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("&#[a-fA-F0-9]{6}");
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        while (matcher.find()) {
+            String color = text.substring(matcher.start(), matcher.end());
+            try {
+                // Wymaga kompilacji z użyciem API obsługującego HEX (Spigot 1.16+)
+                // Używamy pełnej ścieżki, aby uniknąć konfliktu z org.bukkit.ChatColor
+                text = text.replace(color, net.md_5.bungee.api.ChatColor.of(color.substring(1)).toString());
+            } catch (Throwable ignored) {
+                // Fallback dla starszych wersji API/Serwera, które nie mają metody 'of'
+            }
+            matcher = pattern.matcher(text);
+        }
+        return ChatColor.translateAlternateColorCodes('&', text);
+    }
     public void setTopStatistics(@Nullable StatisticsOrdered topStatistics) {
         this.topStatistics = topStatistics;
     }
