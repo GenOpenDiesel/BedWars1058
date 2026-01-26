@@ -612,17 +612,24 @@ private String colorize(String text) {
         while (matcher.find()) {
             String color = text.substring(matcher.start(), matcher.end());
             try {
-                // Wymaga kompilacji z użyciem API obsługującego HEX (Spigot 1.16+)
-                // Używamy pełnej ścieżki, aby uniknąć konfliktu z org.bukkit.ChatColor
-                text = text.replace(color, net.md_5.bungee.api.ChatColor.of(color.substring(1)).toString());
+                // ZMIANA: Używamy refleksji, aby kod kompilował się na API 1.8.8
+                // Klasa ChatColor i metoda of() są ładowane dynamicznie tylko jeśli istnieją
+                Class<?> chatColorClass = Class.forName("net.md_5.bungee.api.ChatColor");
+                java.lang.reflect.Method ofMethod = chatColorClass.getMethod("of", String.class);
+                
+                // Wywołanie ChatColor.of("#RRGGBB") - substring(1) zmienia &#123456 na #123456
+                Object colorObj = ofMethod.invoke(null, color.substring(1));
+                
+                text = text.replace(color, colorObj.toString());
             } catch (Throwable ignored) {
-                // Fallback dla starszych wersji API/Serwera, które nie mają metody 'of'
+                // Fallback dla starszych wersji (1.8-1.15), które nie obsługują HEX
+                // WAŻNE: Musimy usunąć kod koloru z tekstu, inaczej pętla while(matcher.find())
+                // będzie nieskończona, bo ciągle będzie znajdować ten sam niepodmieniony fragment.
+                text = text.replace(color, "");
             }
+            // Odświeżamy matcher po zmianie długości tekstu
             matcher = pattern.matcher(text);
         }
         return ChatColor.translateAlternateColorCodes('&', text);
-    }
-    public void setTopStatistics(@Nullable StatisticsOrdered topStatistics) {
-        this.topStatistics = topStatistics;
     }
 }
