@@ -244,6 +244,17 @@ public class GamePlayingTask implements Runnable, PlayingTask {
                     Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.REMOVED, getArena().getTeam(e.getKey()), e.getKey(), getArena()));
                 } else {
                     getArena().getShowTime().replace(e.getKey(), e.getValue() - 1);
+                    // ADDED: Refresh armor hide logic every second to prevent it from reappearing
+                    ITeam t = getArena().getTeam(e.getKey());
+                    if (t != null) {
+                        for (Player p1 : e.getKey().getWorld().getPlayers()) {
+                            if (getArena().isSpectator(p1)) {
+                                nms.hideArmor(e.getKey(), p1);
+                            } else if (t != getArena().getTeam(p1)) {
+                                nms.hideArmor(e.getKey(), p1);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -258,5 +269,3 @@ public class GamePlayingTask implements Runnable, PlayingTask {
         task.cancel();
     }
 }
-
-
