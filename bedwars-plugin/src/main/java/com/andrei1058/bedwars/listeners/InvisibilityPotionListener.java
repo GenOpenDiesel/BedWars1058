@@ -74,6 +74,16 @@ public class InvisibilityPotionListener implements Listener {
                             // keep trace of invisible players to send hide armor packet when required
                             // because potions do not hide armors
                             a.getShowTime().replace(e.getPlayer(), pe.getDuration() / 20);
+                            
+                            // ADDED: Force hide armor again even if already invisible, just in case
+                            for (Player p1 : e.getPlayer().getWorld().getPlayers()) {
+                                if (a.isSpectator(p1)) {
+                                    nms.hideArmor(e.getPlayer(), p1);
+                                } else if (t != a.getTeam(p1)) {
+                                    nms.hideArmor(e.getPlayer(), p1);
+                                }
+                            }
+
                             // call custom event
                             Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.ADDED, t, e.getPlayer(), t.getArena()));
                         } else {
