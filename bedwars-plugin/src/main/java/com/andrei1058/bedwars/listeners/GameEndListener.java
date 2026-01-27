@@ -1,10 +1,14 @@
 package com.andrei1058.bedwars.listeners;
 
+import com.andrei1058.bedwars.BedWars;
 import com.andrei1058.bedwars.api.events.gameplay.GameEndEvent;
+import com.andrei1058.bedwars.api.language.Language;
+import com.andrei1058.bedwars.api.language.Messages;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -20,9 +24,24 @@ public class GameEndListener implements Listener {
             return;
         }
 
-        // clear inventories
-        for (UUID p : event.getAliveWinners()) {
-            Bukkit.getPlayer(p).getInventory().clear();
+        // Clear inventories and give leave item to ALL players (winners and losers)
+        for (Player player : event.getArena().getPlayers()) {
+            // Clear inventory for everyone
+            player.getInventory().clear();
+
+            // Create leave item (Bed) - "sb-leave" is the internal tag for the quit item
+            ItemStack leaveItem = BedWars.nms.createItemStack(
+                    BedWars.getForCurrentVersion("BED", "RED_BED", "RED_BED"),
+                    1,
+                    (short) 0,
+                    Language.getMsg(player, Messages.ARENA_SPECTATOR_LEAVE_ITEM_NAME),
+                    Language.getMsg(player, Messages.ARENA_SPECTATOR_LEAVE_ITEM_LORE),
+                    "sb-leave"
+            );
+
+            // Set item in the last slot (8)
+            player.getInventory().setItem(8, leaveItem);
+            player.updateInventory();
         }
 
         // clear dropped items
