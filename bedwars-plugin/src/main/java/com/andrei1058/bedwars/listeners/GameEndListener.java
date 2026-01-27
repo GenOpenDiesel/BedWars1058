@@ -44,7 +44,8 @@ public class GameEndListener implements Listener {
                 leaveItem.setItemMeta(im);
             }
 
-            leaveItem = BedWars.nms.addCustomData(leaveItem, "sb-leave");
+            // FIX: Zmieniono tag z "sb-leave" na "RUNCOMMAND_bw leave", aby obsłużyć kliknięcie przez Interact.java
+            leaveItem = BedWars.nms.addCustomData(leaveItem, "RUNCOMMAND_bw leave");
 
             // Set item in the last slot (8)
             player.getInventory().setItem(8, leaveItem);
