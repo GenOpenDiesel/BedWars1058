@@ -479,8 +479,22 @@ public class DamageDeathMove implements Listener {
             }
 
             // handle drops
+// handle drops
             if (PlayerDrops.handlePlayerDrops(a, victim, killer, victimsTeam, killersTeam, cause, e.getDrops())) {
                 e.getDrops().clear();
+            }
+
+            // send respawn packet
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                victim.spigot().respawn();
+                // Zmiana: Ustawienie trybu obserwatora po odrodzeniu
+                victim.setGameMode(org.bukkit.GameMode.SPECTATOR); 
+            }, 3L);
+
+            // reset last damager
+            LastHit lastHit = LastHit.getLastHit(victim);
+            if (lastHit != null) {
+                lastHit.setDamager(null);
             }
 
             // send respawn packet
