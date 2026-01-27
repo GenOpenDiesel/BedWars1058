@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -33,11 +34,17 @@ public class GameEndListener implements Listener {
             ItemStack leaveItem = BedWars.nms.createItemStack(
                     BedWars.getForCurrentVersion("BED", "RED_BED", "RED_BED"),
                     1,
-                    (short) 0,
-                    Language.getMsg(player, Messages.ARENA_SPECTATOR_LEAVE_ITEM_NAME),
-                    Language.getMsg(player, Messages.ARENA_SPECTATOR_LEAVE_ITEM_LORE),
-                    "sb-leave"
+                    (short) 0
             );
+
+            ItemMeta im = leaveItem.getItemMeta();
+            if (im != null) {
+                im.setDisplayName(Language.getMsg(player, Messages.ARENA_SPECTATOR_LEAVE_ITEM_NAME));
+                im.setLore(Language.getList(player, Messages.ARENA_SPECTATOR_LEAVE_ITEM_LORE));
+                leaveItem.setItemMeta(im);
+            }
+
+            leaveItem = BedWars.nms.addCustomData(leaveItem, "sb-leave");
 
             // Set item in the last slot (8)
             player.getInventory().setItem(8, leaveItem);
