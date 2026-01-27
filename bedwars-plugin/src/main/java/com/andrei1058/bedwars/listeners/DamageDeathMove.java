@@ -324,7 +324,7 @@ public class DamageDeathMove implements Listener {
         }
     }
 
-    @EventHandler
+@EventHandler
     public void onDeath(@NotNull PlayerDeathEvent e) {
         Player victim = e.getEntity(), killer = e.getEntity().getKiller();
         ITeam killersTeam = null;
@@ -486,8 +486,10 @@ public class DamageDeathMove implements Listener {
             // send respawn packet
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 victim.spigot().respawn();
-                // Zmiana: Ustawienie trybu obserwatora po odrodzeniu
-                victim.setGameMode(org.bukkit.GameMode.SPECTATOR); 
+                // USUNIĘTO: victim.setGameMode(org.bukkit.GameMode.SPECTATOR);
+                // Ta linijka powodowała błąd. Jeśli chcesz, aby tylko wyeliminowani gracze
+                // byli spectatorami, plugin obsługuje to samodzielnie w onRespawn -> startReSpawnSession.
+                // Jeżeli chcesz wymusić spectatora, musisz to robić TYLKO gdy victimsTeam.isBedDestroyed() jest true.
             }, 3L);
 
             // reset last damager
@@ -501,7 +503,7 @@ public class DamageDeathMove implements Listener {
                     g.disable();
                 }
                 victimsTeam.getGenerators().clear();
-}
+            }
         }
     }
 
