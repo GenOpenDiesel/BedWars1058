@@ -478,7 +478,6 @@ public class DamageDeathMove implements Listener {
                 }
             }
 
-            // handle drops
 // handle drops
             if (PlayerDrops.handlePlayerDrops(a, victim, killer, victimsTeam, killersTeam, cause, e.getDrops())) {
                 e.getDrops().clear();
@@ -497,24 +496,12 @@ public class DamageDeathMove implements Listener {
                 lastHit.setDamager(null);
             }
 
-            // send respawn packet
-            Bukkit.getScheduler().runTaskLater(plugin, () -> victim.spigot().respawn(), 3L);
-
-            // reset last damager
-            LastHit lastHit = LastHit.getLastHit(victim);
-            if (lastHit != null) {
-                lastHit.setDamager(null);
-            }
-
-
             if (victimsTeam.isBedDestroyed() && victimsTeam.getSize() == 1 && a.getConfig().getBoolean(ConfigPath.ARENA_DISABLE_GENERATOR_FOR_EMPTY_TEAMS)) {
                 for (IGenerator g : victimsTeam.getGenerators()) {
                     g.disable();
                 }
                 victimsTeam.getGenerators().clear();
             }
-        }
-    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent e) {
