@@ -38,6 +38,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static com.andrei1058.bedwars.BedWars.nms;
@@ -233,25 +235,29 @@ public class GamePlayingTask implements Runnable, PlayingTask {
 
         /* INVISIBILITY FOR ARMOR */
         if (!getArena().getShowTime().isEmpty()) {
-            for (Map.Entry<Player, Integer> e : getArena().getShowTime().entrySet()) {
-                if (e.getValue() <= 0) {
-                    for (Player p : e.getKey().getWorld().getPlayers()) {
-                        nms.showArmor(e.getKey(), p);
-                        //nms.showPlayer(e.getKey(), p);
+            // Safe iteration over keys copy to avoid ConcurrentModificationException
+            List<Player> players = new ArrayList<>(getArena().getShowTime().keySet());
+            for (Player player : players) {
+                Integer time = getArena().getShowTime().get(player);
+                if (time == null) continue;
+
+                if (time <= 0) {
+                    for (Player p : player.getWorld().getPlayers()) {
+                        nms.showArmor(player, p);
                     }
-                    e.getKey().removePotionEffect(PotionEffectType.INVISIBILITY);
-                    getArena().getShowTime().remove(e.getKey());
-                    Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.REMOVED, getArena().getTeam(e.getKey()), e.getKey(), getArena()));
+                    player.removePotionEffect(PotionEffectType.INVISIBILITY);
+                    getArena().getShowTime().remove(player);
+                    Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.REMOVED, getArena().getTeam(player), player, getArena()));
                 } else {
-                    getArena().getShowTime().replace(e.getKey(), e.getValue() - 1);
-                    // ADDED: Refresh armor hide logic every second to prevent it from reappearing
-                    ITeam t = getArena().getTeam(e.getKey());
+                    getArena().getShowTime().put(player, time - 1);
+                    // Refresh armor hide logic
+                    ITeam t = getArena().getTeam(player);
                     if (t != null) {
-                        for (Player p1 : e.getKey().getWorld().getPlayers()) {
+                        for (Player p1 : player.getWorld().getPlayers()) {
                             if (getArena().isSpectator(p1)) {
-                                nms.hideArmor(e.getKey(), p1);
+                                nms.hideArmor(player, p1);
                             } else if (t != getArena().getTeam(p1)) {
-                                nms.hideArmor(e.getKey(), p1);
+                                nms.hideArmor(player, p1);
                             }
                         }
                     }
