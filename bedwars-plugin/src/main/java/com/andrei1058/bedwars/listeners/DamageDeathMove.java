@@ -501,7 +501,9 @@ public class DamageDeathMove implements Listener {
                     g.disable();
                 }
                 victimsTeam.getGenerators().clear();
-            }
+}
+        }
+    }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(PlayerRespawnEvent e) {
