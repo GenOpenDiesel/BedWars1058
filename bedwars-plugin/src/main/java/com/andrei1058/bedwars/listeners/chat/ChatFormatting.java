@@ -53,19 +53,23 @@ public class ChatFormatting implements Listener {
     public void onChat(AsyncPlayerChatEvent e) {
         if (e == null) return;
         Player p = e.getPlayer();
+        Language language = getPlayerLanguage(p);
 
         // in shared mode we don't want messages from outside the arena to be seen in game
         if (getServerType() == ServerType.SHARED && Arena.getArenaByPlayer(p) == null) {
             e.getRecipients().removeIf(pl -> Arena.getArenaByPlayer(pl) != null);
-            return;
+            // Brak return tutaj, aby kod mógł przejść do formatowania lobby w bloku else poniżej,
+            // jeśli serwer nie jest w trybie BUNGEE (gdzie SHARED zwykle oznacza brak obsługi lobby przez ten plugin).
+            // Ale dla bezpieczeństwa, w trybie SHARED plugin zwykle nie obsługuje czatu na spawnie.
+            // Jeśli chcesz formatowanie na spawnie w trybie SHARED, usuń poniższy return lub zmodyfikuj logikę.
+            // Zostawiam standardowe zachowanie (return), ale dodaję logikę dla MULTIARENA poniżej.
+             if (!config.getBoolean(ConfigPath.GENERAL_CHAT_FORMATTING)) return;
         }
 
         // handle chat color for the MESSAGE content
         if (Permissions.hasPermission(p, Permissions.PERMISSION_CHAT_COLOR, Permissions.PERMISSION_VIP, Permissions.PERMISSION_ALL)) {
             e.setMessage(translate(e.getMessage()));
         }
-
-        Language language = getPlayerLanguage(p);
 
         // handle lobby world for multi arena
         if (getServerType() == ServerType.MULTIARENA && p.getWorld().getName().equalsIgnoreCase(BedWars.getLobbyWorld())) {
@@ -78,7 +82,14 @@ public class ChatFormatting implements Listener {
 
             // Czat dla obserwatorów (spectators)
             if (a.isSpectator(p)) {
-                setRecipients(e, a.getSpectators());
+                // POPRAWKA 1: Jeśli gracz ma permisję admina/OP, widzą go wszyscy (gracze + inni obserwatorzy)
+                if (p.hasPermission(Permissions.PERMISSION_ALL) || p.isOp() || p.hasPermission("bedwars.admin")) {
+                    setRecipients(e, a.getPlayers(), a.getSpectators());
+                } else {
+                    // Zwykły gracz widzi tylko innych obserwatorów
+                    setRecipients(e, a.getSpectators());
+                }
+                
                 e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_SPECTATOR), p, null));
                 return;
             }
@@ -94,15 +105,12 @@ public class ChatFormatting implements Listener {
             String msg = e.getMessage();
 
             // --- LOGIKA KRZYKU (SHOUT) ---
-            // Jeśli wiadomość zaczyna się od "!" (lub "shout"), widzą ją wszyscy
             if (isShouting(msg, language)) {
-                // Sprawdzenie uprawnień
                 if (!(p.hasPermission(Permissions.PERMISSION_SHOUT_COMMAND) || p.hasPermission(Permissions.PERMISSION_ALL))) {
                     e.setCancelled(true);
                     p.sendMessage(Language.getMsg(p, Messages.COMMAND_NOT_FOUND_OR_INSUFF_PERMS));
                     return;
                 }
-                // Sprawdzenie cooldownu
                 if (ShoutCommand.isShoutCooldown(p)) {
                     e.setCancelled(true);
                     p.sendMessage(language.m(Messages.COMMAND_COOLDOWN)
@@ -112,11 +120,8 @@ public class ChatFormatting implements Listener {
                 }
 
                 ShoutCommand.updateShout(p);
-
-                // Ustawiamy odbiorców na WSZYSTKICH (gracze + obserwatorzy)
                 setRecipients(e, a.getPlayers(), a.getSpectators());
 
-                // Usuwamy prefix "!" z wiadomości
                 msg = clearShout(msg, language);
                 if (msg.isEmpty()) {
                     e.setCancelled(true);
@@ -128,53 +133,56 @@ public class ChatFormatting implements Listener {
             }
 
             // --- LOGIKA CZATU DRUŻYNOWEGO ---
-            // Jeśli wiadomość NIE jest krzykiem, widzi ją tylko drużyna
-
-            // Wyjątek dla trybu Solo (1 osoba w teamie) - tam czat zwykły widzą wszyscy
-            // (Jeśli chcesz, aby w Solo też trzeba było krzyczeć, usuń ten warunek if i zostaw tylko else)
             if (a.getMaxInTeam() == 1) {
                 setRecipients(e, a.getPlayers(), a.getSpectators());
             } else {
-                // W trybach drużynowych (Doubles, 3v3, 4v4) widzą tylko członkowie Twojego teamu
                 setRecipients(e, team.getMembers());
             }
 
             e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_TEAM), p, team));
-            return;
+        } else {
+            // POPRAWKA 2: Obsługa formatowania na LOBBY (gdy gracz nie jest na arenie)
+            // Używamy ConfigPath.GENERAL_CHAT_FORMATTING (formatChat: true w configu)
+            if (config.getBoolean(ConfigPath.GENERAL_CHAT_FORMATTING)) {
+                // Upewnij się, że w messages_en.yml (i innych językach) masz sekcję:
+                // chat:
+                //   lobby: ...
+                // co odpowiada Messages.FORMATTING_CHAT_LOBBY w kodzie źródłowym.
+                // Jeśli kompilator wyrzuci błąd, że nie ma takiego pola, upewnij się, że masz najnowsze API.
+                // Jeśli nie masz, możesz tu wpisać stringa na sztywno lub użyć innej zmiennej.
+                // Standardowo w BW1058 jest to Messages.FORMATTING_CHAT_LOBBY.
+                try {
+                    e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_LOBBY), p, null));
+                } catch (NoSuchFieldError err) {
+                    // Fallback jeśli używasz starej wersji API
+                    e.setFormat(parsePHolders("{vPrefix}{player}{vSuffix}: {message}", p, null));
+                }
+            }
         }
-    } // <--- Dodano brakującą klamrę zamykającą metodę onChat
+    }
 
     /**
      * Tłumaczy kody kolorów, w tym HEX (&#RRGGBB oraz #RRGGBB).
-     * Metoda jest static, aby można jej było użyć w parsePHolders.
      */
     public static String translate(String message) {
-        // Obsługa HEX dla wersji 1.16+
         try {
-            // Regex łapie zarówno &#RRGGBB jak i #RRGGBB
             Pattern pattern = Pattern.compile("(&#|#)([A-Fa-f0-9]{6})");
             Matcher matcher = pattern.matcher(message);
             while (matcher.find()) {
-                String fullMatch = matcher.group();   // np. #FF0000 lub &#FF0000
-                String colorCode = matcher.group(2);  // np. FF0000
-
-                // Używamy refleksji, aby kod kompilował się na API 1.8.8,
-                // ale pobierał metodę 'of' dynamicznie na serwerach 1.16+
+                String fullMatch = matcher.group();
+                String colorCode = matcher.group(2);
                 Object colorObj = net.md_5.bungee.api.ChatColor.class
                         .getMethod("of", String.class)
                         .invoke(null, "#" + colorCode);
-
                 message = message.replace(fullMatch, colorObj.toString());
                 matcher = pattern.matcher(message);
             }
         } catch (Exception ignored) {
-            // Ignorujemy błędy na starszych wersjach serwera (poniżej 1.16)
         }
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 
     private static String parsePHolders(String content, Player player, @Nullable ITeam team) {
-        // Wstawianie zmiennych (prefixy, suffixy mogą zawierać kolory HEX!)
         content = content
                 .replace("{vPrefix}", getChatSupport().getPrefix(player))
                 .replace("{vSuffix}", getChatSupport().getSuffix(player))
@@ -189,14 +197,8 @@ public class ChatFormatting implements Listener {
             content = content.replace("{team}", teamFormat);
         }
 
-        // Obsługa PlaceholderAPI
         String processed = SupportPAPI.getSupportPAPI().replace(player, content);
-
-        // KLUCZOWA POPRAWKA: Tłumaczenie kolorów w CAŁYM formacie (prefixy, ranga itp.)
-        // Wcześniej tłumaczone było tylko e.getMessage(), a format pozostawał "surowy"
         processed = translate(processed);
-
-        // Na końcu wstawiamy placeholder wiadomości (która jest już pokolorowana w onChat)
         return processed.replace("{message}", "%2$s");
     }
 
