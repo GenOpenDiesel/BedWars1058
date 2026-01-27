@@ -114,6 +114,9 @@ public class TeleporterGUI {
     /**
      * Create a player head
      */
+/**
+     * Create a player head
+     */
     private static ItemStack createHead(Player targetPlayer, Player GUIholder) {
         ItemStack i = nms.getPlayerHead(targetPlayer, null);
         ItemMeta im = i.getItemMeta();
@@ -127,8 +130,9 @@ public class TeleporterGUI {
                 .replace("{vSuffix}", BedWars.getChatSupport().getSuffix(targetPlayer))
                 .replace("{team}", targetPlayerTeam.getDisplayName(Language.getPlayerLanguage(GUIholder)))
                 .replace("{teamColor}", String.valueOf(targetPlayerTeam.getColor().chat()))
-                .replace("{player}", targetPlayer.getDisplayName())
-                .replace("{playername}", targetPlayer.getName());
+                // ZMIANA: Dodano kolor drużyny przed nickiem gracza
+                .replace("{player}", targetPlayerTeam.getColor().chat() + targetPlayer.getDisplayName())
+                .replace("{playername}", targetPlayerTeam.getColor().chat() + targetPlayer.getName());
 
         // Apply HEX color translation to the final string
         im.setDisplayName(colorize(displayName));
