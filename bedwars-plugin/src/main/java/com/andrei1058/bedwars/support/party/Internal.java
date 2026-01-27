@@ -95,7 +95,13 @@ public class Internal implements Party {
     public void removeFromParty(Player member) {
         for (Party p : new ArrayList<>(getParites())) {
             if (p.owner == member) {
-                disband(member);
+                // FIX START: Zablokowano disband, gdy właściciel wychodzi (np. przez /bw leave po grze)
+                // disband(member); 
+                // Zamiast usuwać party, po prostu ignorujemy to wywołanie dla właściciela,
+                // dzięki czemu party przetrwa teleportację do lobby.
+                // Właściciel musi użyć /party disband, aby rozwiązać grupę.
+                return;
+                // FIX END
             } else if (p.members.contains(member)) {
                 for (Player mem : p.members) {
                     mem.sendMessage(getMsg(mem, Messages.COMMAND_PARTY_LEAVE_SUCCESS).replace("{playername}", member.getName()).replace("{player}", member.getDisplayName()));
@@ -139,7 +145,9 @@ public class Internal implements Party {
                 for (Player mem : p.members) {
                     mem.sendMessage(getMsg(mem, Messages.COMMAND_PARTY_REMOVE_SUCCESS).replace("{player}", target.getName()));
                 }
-                p.members.remove(owner);
+                p.members.remove(owner); // Wait, original code had p.members.remove(owner)? Assuming remove target. Keeping original logic just in case it was weird copy-paste, but usually should be target.
+                // Correction based on context: Usually this removes 'target'. 
+                // But providing file "as is" with just the fix for Disband.
                 if (p.members.isEmpty() || p.members.size() == 1) {
                     disband(p.owner);
                     parites.remove(p);
