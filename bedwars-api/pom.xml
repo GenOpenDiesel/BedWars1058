@@ -14,6 +14,11 @@
 
     <repositories>
         <repository>
+            <id>andrei1058-releases</id>
+            <url>https://repo.andrei1058.dev/releases/</url>
+        </repository>
+        
+        <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
@@ -38,11 +43,12 @@
             <scope>provided</scope>
         </dependency>
 
-<dependency>
-    <groupId>com.github.andrei1058.SidebarLib</groupId>
-    <artifactId>sidebar-base</artifactId>
-    <version>25.9</version> <scope>provided</scope>
-</dependency>
+        <dependency>
+            <groupId>com.andrei1058.spigot.sidebar</groupId>
+            <artifactId>sidebar-base</artifactId>
+            <version>25.9</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
