@@ -38,12 +38,11 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.andrei1058.SidebarLib</groupId>
-            <artifactId>sidebar-base</artifactId>
-            <version>master-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+<dependency>
+    <groupId>com.github.andrei1058.SidebarLib</groupId>
+    <artifactId>sidebar-base</artifactId>
+    <version>25.9</version> <scope>provided</scope>
+</dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
