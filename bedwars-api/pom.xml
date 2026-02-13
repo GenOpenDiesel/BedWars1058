@@ -20,13 +20,17 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>andrei1058-releases</id>
+            <url>https://repo.andrei1058.dev/releases/</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>com.google.common</groupId>
-            <artifactId>google-collect</artifactId>
-            <version>1.0</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>17.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -43,9 +47,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.andrei1058.SidebarLib</groupId>
+            <groupId>com.andrei1058.spigot.sidebar</groupId>
             <artifactId>sidebar-base</artifactId>
-            <version>master-SNAPSHOT</version>
+            <version>24.2</version>
         </dependency>
     </dependencies>
 
