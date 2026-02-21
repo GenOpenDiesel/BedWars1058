@@ -111,6 +111,7 @@
         <module>resetadapter_aswm</module>
         <module>resetadapter_slime</module>
         <module>resetadapter_slimepaper</module>
+        <module>versionsupport_1_8_R3</module>
         <module>versionsupport_1_12_R1</module>
         <module>versionsupport_common</module>
         <module>versionsupport_v1_16_R3</module>
