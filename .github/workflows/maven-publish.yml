@@ -27,19 +27,19 @@ jobs:
       - name: Install SidebarLib dependencies
         run: |
           set -euo pipefail
-          install_sidebar() {
-            local ver="$1"
-            local dir="/tmp/SidebarLib-$ver"
-            echo "::group::Installing SidebarLib $ver"
-            rm -rf "$dir"
-            git clone --depth 1 --branch "$ver" https://github.com/andrei1058/SidebarLib.git "$dir"
-            cd "$dir"
-            mvn -B versions:set -DnewVersion="$ver" -DgenerateBackupPoms=false
-            mvn -B versions:update-child-modules -DgenerateBackupPoms=false
-            mvn -B clean install -DskipTests
-            echo "::endgroup::"
-          }
-          install_sidebar 24.2
+          ver="24.2"
+          dir="/tmp/SidebarLib-$ver"
+          echo "::group::Installing SidebarLib $ver"
+          rm -rf "$dir"
+          git clone --depth 1 --branch "$ver" https://github.com/andrei1058/SidebarLib.git "$dir"
+          cd "$dir"
+          find . -name 'pom.xml' -print0 | xargs -0 sed -i \
+            -e 's|https://repo.extendedclip.com/content/repositories/placeholderapi/|https://repo.extendedclip.com/releases/|g' \
+            -e 's|>2\.11\.3<|>2.11.6<|g'
+          mvn -B versions:set -DnewVersion="$ver" -DgenerateBackupPoms=false
+          mvn -B versions:update-child-modules -DgenerateBackupPoms=false
+          mvn -B clean install -DskipTests
+          echo "::endgroup::"
 
       - name: Build with Maven
         run: mvn -B clean package -DskipTests
