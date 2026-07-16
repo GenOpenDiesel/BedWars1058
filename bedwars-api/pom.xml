@@ -22,7 +22,7 @@
         </repository>
         <repository>
             <id>andrei-prod</id>
-            <url>https://repo.andrei1058.dev/releases</url>
+            <url>https://repo.andrei1058.com/releases</url>
         </repository>
     </repositories>
 
