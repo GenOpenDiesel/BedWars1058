@@ -18,6 +18,25 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # repo.andrei1058.com no longer serves public sidebar jars (404),
+      # so we build the required SidebarLib releases into the local Maven cache.
+      - name: Install SidebarLib dependencies
+        run: |
+          set -euo pipefail
+          install_sidebar() {
+            local ver="$1"
+            local dir="/tmp/SidebarLib-$ver"
+            echo "::group::Installing SidebarLib $ver"
+            rm -rf "$dir"
+            git clone --depth 1 --branch "$ver" https://github.com/andrei1058/SidebarLib.git "$dir"
+            cd "$dir"
+            mvn -B versions:set -DnewVersion="$ver" -DgenerateBackupPoms=false
+            mvn -B versions:update-child-modules -DgenerateBackupPoms=false
+            mvn -B clean install -DskipTests
+            echo "::endgroup::"
+          }
+          install_sidebar 24.2
+
       - name: Build with Maven
         run: mvn -B clean package -DskipTests
 
