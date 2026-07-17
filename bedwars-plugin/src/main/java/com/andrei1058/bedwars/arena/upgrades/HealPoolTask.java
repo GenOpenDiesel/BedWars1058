@@ -9,9 +9,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.andrei1058.bedwars.BedWars.config;
 import static com.andrei1058.bedwars.BedWars.plugin;
@@ -24,7 +24,8 @@ public class HealPoolTask extends BukkitRunnable {
     private Random r = new Random();
     private Location l;
 
-    private static List<HealPoolTask> healPoolTasks = new ArrayList<>();
+    // CopyOnWriteArrayList: async particle task and game-end cleanup share this list
+    private static final List<HealPoolTask> healPoolTasks = new CopyOnWriteArrayList<>();
 
     public HealPoolTask(ITeam bwt){
         this.bwt = bwt;
@@ -51,6 +52,7 @@ public class HealPoolTask extends BukkitRunnable {
         //null checks
         if ((bwt == null) || (bwt.getSpawn() == null) || (arena == null)){
             healPoolTasks.remove(this);
+            cancel();
             return;
         }
 
@@ -85,37 +87,41 @@ public class HealPoolTask extends BukkitRunnable {
         }
         return false;
     }
+
     public static void removeForArena(IArena a){
         if (healPoolTasks.isEmpty() || a == null) return;
-        for (HealPoolTask hpt: healPoolTasks) {
-            if (hpt == null) continue;
-            if (hpt.getArena().equals(a)){
+        healPoolTasks.removeIf(hpt -> {
+            if (hpt == null) return true;
+            if (a.equals(hpt.getArena())) {
                 hpt.cancel();
-                healPoolTasks.remove(hpt);
+                return true;
             }
-        }
+            return false;
+        });
     }
 
-    public  static void removeForArena(String a){
-        if (healPoolTasks == null || healPoolTasks.isEmpty()  || (a == null)) return;
-        for (HealPoolTask hpt: healPoolTasks) {
-            if (hpt == null) continue;
-            if (hpt.getArena().getWorldName().equals(a)){
+    public static void removeForArena(String a){
+        if (healPoolTasks.isEmpty() || a == null) return;
+        healPoolTasks.removeIf(hpt -> {
+            if (hpt == null || hpt.getArena() == null) return true;
+            if (a.equals(hpt.getArena().getWorldName())) {
                 hpt.cancel();
-                healPoolTasks.remove(hpt);
+                return true;
             }
-        }
+            return false;
+        });
     }
 
-    public  static void removeForTeam(ITeam team){
-        if (healPoolTasks == null || healPoolTasks.isEmpty()  || (team == null)) return;
-        for (HealPoolTask hpt:healPoolTasks) {
-            if (hpt == null) continue;
-            if (hpt.getBwt().equals(team)){
+    public static void removeForTeam(ITeam team){
+        if (healPoolTasks.isEmpty() || team == null) return;
+        healPoolTasks.removeIf(hpt -> {
+            if (hpt == null) return true;
+            if (team.equals(hpt.getBwt())) {
                 hpt.cancel();
-                healPoolTasks.remove(hpt);
+                return true;
             }
-        }
+            return false;
+        });
     }
 
     public ITeam getBwt() {return bwt;}
