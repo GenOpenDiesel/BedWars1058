@@ -180,6 +180,8 @@ public class ConfigPath {
     private static final String GENERAL_CHAT = "chat-settings.";
     public static final String GENERAL_CHAT_FORMATTING = GENERAL_CHAT+"format";
     public static final String GENERAL_CHAT_GLOBAL = GENERAL_CHAT+"global";
+    /** Max playtime hours for team-chat newbie tip. 0 disables the tip. */
+    public static final String GENERAL_CHAT_TEAM_TIP_MAX_HOURS = GENERAL_CHAT + "team-tip-max-playtime-hours";
 
     public static final String ARENA_DISPLAY_NAME = "display-name";
     public static final String ARENA_CONFIGURATION_MAX_BUILD_Y = "max-build-y";

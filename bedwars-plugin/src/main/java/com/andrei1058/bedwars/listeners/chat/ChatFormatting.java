@@ -31,14 +31,18 @@ import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.commands.shout.ShoutCommand;
 import com.andrei1058.bedwars.configuration.Permissions;
+import com.andrei1058.bedwars.stats.PlayerStats;
 import com.andrei1058.bedwars.support.papi.SupportPAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -133,10 +137,11 @@ public class ChatFormatting implements Listener {
             }
 
             // --- LOGIKA CZATU DRUŻYNOWEGO ---
-            if (a.getMaxInTeam() == 1) {
+            if (a.getMaxInTeam() == 1 || team == null) {
                 setRecipients(e, a.getPlayers(), a.getSpectators());
             } else {
                 setRecipients(e, team.getMembers());
+                sendTeamChatTipIfNewbie(p);
             }
 
             e.setFormat(parsePHolders(language.m(Messages.FORMATTING_CHAT_TEAM), p, team));
@@ -224,6 +229,47 @@ public class ChatFormatting implements Listener {
             for (List<Player> list : target) {
                 event.getRecipients().addAll(list);
             }
+        }
+    }
+
+    /**
+     * Reminds new players that team modes use team chat by default (! for global).
+     */
+    private static void sendTeamChatTipIfNewbie(Player player) {
+        if (config.getBoolean(ConfigPath.GENERAL_CHAT_GLOBAL)) {
+            return;
+        }
+        if (!hasLowPlaytime(player)) {
+            return;
+        }
+        String tip = getMsg(player, Messages.CHAT_TEAM_TIP_NEWBIE);
+        Bukkit.getScheduler().runTask(plugin, () -> nms.playAction(player, tip));
+    }
+
+    /**
+     * True when Minecraft playtime (or BedWars first-play age as fallback) is under the configured hours.
+     */
+    private static boolean hasLowPlaytime(Player player) {
+        int maxHours = config.getInt(ConfigPath.GENERAL_CHAT_TEAM_TIP_MAX_HOURS);
+        if (maxHours <= 0) {
+            return false;
+        }
+        long maxTicks = maxHours * 60L * 60L * 20L;
+        try {
+            Statistic playtimeStat;
+            try {
+                // 1.13+: still stored in ticks despite the name
+                playtimeStat = Statistic.valueOf("PLAY_ONE_MINUTE");
+            } catch (IllegalArgumentException ignored) {
+                playtimeStat = Statistic.PLAY_ONE_TICK;
+            }
+            return player.getStatistic(playtimeStat) < maxTicks;
+        } catch (Throwable ignored) {
+            PlayerStats stats = BedWars.getStatsManager().getUnsafe(player.getUniqueId());
+            if (stats == null || stats.getFirstPlay() == null) {
+                return true;
+            }
+            return Instant.now().getEpochSecond() - stats.getFirstPlay().getEpochSecond() < maxHours * 3600L;
         }
     }
 }

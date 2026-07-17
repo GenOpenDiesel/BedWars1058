@@ -175,6 +175,7 @@ public class Indonesia extends Language {
         yml.addDefault(Messages.FORMATTING_CHAT_SHOUT, "&6[SHOUT] {team} {level}{vPrefix}&7{player}&f{vSuffix}: {message}");
         yml.addDefault(Messages.FORMATTING_CHAT_TEAM, "&f{team} {level}{vPrefix}&7{player}{vSuffix} {message}");
         yml.addDefault(Messages.FORMATTING_CHAT_SPECTATOR, "&7[PENONTON] {level}{vPrefix}{player}{vSuffix}: {message}");
+        yml.addDefault(Messages.CHAT_TEAM_TIP_NEWBIE, "&eKamu hanya mengirim ke tim sendiri. Awali dengan &6! &euntuk chat global.");
         yml.addDefault(Messages.FORMATTING_SCOREBOARD_HEALTH, List.of("&c❤"));
 
         yml.addDefault(Messages.FORMATTING_SCOREBOARD_DATE, "dd/MM/yy");
