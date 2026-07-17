@@ -145,10 +145,16 @@ public class Interact implements Listener {
                         return;
                     }
                     //make it so only team members can open chests while team is alive, and all when is eliminated
+                    // Pick the CLOSEST team within island-radius (not the last match) so overlapping
+                    // radii cannot assign an enemy island as owner of your team chest.
                     ITeam owner = null;
+                    double bestDist = Double.MAX_VALUE;
                     int isRad = a.getConfig().getInt(ConfigPath.ARENA_ISLAND_RADIUS);
+                    Location chestLoc = e.getClickedBlock().getLocation();
                     for (ITeam t : a.getTeams()) {
-                        if (t.getSpawn().distance(e.getClickedBlock().getLocation()) <= isRad) {
+                        double dist = t.getSpawn().distance(chestLoc);
+                        if (dist <= isRad && dist < bestDist) {
+                            bestDist = dist;
                             owner = t;
                         }
                     }

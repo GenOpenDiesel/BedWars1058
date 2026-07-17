@@ -621,16 +621,40 @@ public class DamageDeathMove implements Listener {
             }
 
             if (a.isSpectator(e.getPlayer()) || a.isReSpawning(e.getPlayer())) {
-                if (e.getTo().getY() < 0) {
-                    TeleportManager.teleportC(e.getPlayer(), a.isSpectator(e.getPlayer()) ? a.getSpectatorLocation() : a.getReSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
-                    e.getPlayer().setAllowFlight(true);
-                    e.getPlayer().setFlying(true);
-                    // how to remove fall velocity?
+                // Y < 0 covers classic maps; y-kill-height covers 1.18+ / custom void floors.
+                if (e.getTo() != null && (e.getTo().getY() < 0 || e.getTo().getBlockY() <= a.getYKillHeight())) {
+                    Player falling = e.getPlayer();
+                    // Clear fall velocity BEFORE teleport — with Paper teleportAsync the old velocity
+                    // otherwise keeps pulling the player down in an endless fall loop.
+                    falling.setVelocity(new Vector(0, 0, 0));
+                    falling.setFallDistance(0);
+                    TeleportManager.teleportC(falling, a.isSpectator(falling) ? a.getSpectatorLocation() : a.getReSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+                    falling.setAllowFlight(true);
+                    falling.setFlying(true);
+                    falling.setVelocity(new Vector(0, 0, 0));
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (!falling.isOnline()) return;
+                        if (!(a.isSpectator(falling) || a.isReSpawning(falling))) return;
+                        falling.setVelocity(new Vector(0, 0, 0));
+                        falling.setFallDistance(0);
+                        falling.setAllowFlight(true);
+                        falling.setFlying(true);
+                    }, 1L);
                 }
             } else {
                 if (a.getStatus() == GameState.playing) {
-                    if (e.getPlayer().getLocation().getBlockY() <= a.getYKillHeight()) {
-                        nms.voidKill(e.getPlayer());
+                    // Prefer MoveEvent destination Y; getLocation() can lag behind on some forks.
+                    if (e.getTo() != null && e.getTo().getBlockY() <= a.getYKillHeight()) {
+                        Player falling = e.getPlayer();
+                        falling.setVelocity(new Vector(0, 0, 0));
+                        falling.setFallDistance(0);
+                        nms.voidKill(falling);
+                        // Fallback when NMS void damage is cancelled/broken (Paper/Folia/other plugins):
+                        // without this the player falls forever until someone kills them in PvP.
+                        if (falling.isOnline() && !falling.isDead() && falling.getHealth() > 0) {
+                            falling.setLastDamageCause(new EntityDamageEvent(falling, EntityDamageEvent.DamageCause.VOID, falling.getHealth()));
+                            falling.setHealth(0);
+                        }
                     }
                     for (ITeam t : a.getTeams()) {
                         if (e.getPlayer().getLocation().distance(t.getBed()) < 4) {
