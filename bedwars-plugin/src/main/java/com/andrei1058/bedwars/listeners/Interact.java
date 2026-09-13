@@ -152,6 +152,8 @@ public class Interact implements Listener {
                     int isRad = a.getConfig().getInt(ConfigPath.ARENA_ISLAND_RADIUS);
                     Location chestLoc = e.getClickedBlock().getLocation();
                     for (ITeam t : a.getTeams()) {
+                        // Chest can be in another world (e.g. Lobby) while the player is still registered in the arena.
+                        if (!chestLoc.getWorld().equals(t.getSpawn().getWorld())) continue;
                         double dist = t.getSpawn().distance(chestLoc);
                         if (dist <= isRad && dist < bestDist) {
                             bestDist = dist;

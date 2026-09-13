@@ -279,8 +279,8 @@ public class BwSidebar implements ISidebar {
             providers.add(new PlaceholderProvider("{on}", () ->
                     String.valueOf(Bukkit.getOnlinePlayers().size()))
             );
-            PlayerStats persistentStats = BedWars.getStatsManager().get(player.getUniqueId());
-            //noinspection ConstantConditions
+            // Stats may not be loaded yet right after join; get() throws in that case.
+            PlayerStats persistentStats = BedWars.getStatsManager().getUnsafe(player.getUniqueId());
             if (null != persistentStats) {
                 providers.add(new PlaceholderProvider("{kills}", () ->
                         String.valueOf(persistentStats.getKills()))

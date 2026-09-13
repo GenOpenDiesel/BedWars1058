@@ -321,7 +321,8 @@ public class Misc {
     }
 
     public static String replaceStatsPlaceholders(Player player, @NotNull String s, boolean papiReplacements) {
-        PlayerStats stats = BedWars.getStatsManager().get(player.getUniqueId());
+        PlayerStats stats = BedWars.getStatsManager().getUnsafe(player.getUniqueId());
+        if (stats == null) return s;
 
         if (s.contains("{kills}"))
             s = s.replace("{kills}", String.valueOf(stats.getKills()));

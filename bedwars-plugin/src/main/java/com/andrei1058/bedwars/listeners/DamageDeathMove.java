@@ -657,6 +657,8 @@ public class DamageDeathMove implements Listener {
                         }
                     }
                     for (ITeam t : a.getTeams()) {
+                        // Player can briefly be in another world (e.g. Lobby) while still registered in the arena.
+                        if (!e.getPlayer().getWorld().equals(t.getBed().getWorld())) continue;
                         if (e.getPlayer().getLocation().distance(t.getBed()) < 4) {
                             if (t.isMember(e.getPlayer()) && t instanceof BedWarsTeam) {
                                 if (((BedWarsTeam) t).getBedHolo(e.getPlayer()) == null) continue;

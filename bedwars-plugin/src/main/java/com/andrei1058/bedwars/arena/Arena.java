@@ -1470,6 +1470,25 @@ public class Arena implements IArena {
     }
 
     /**
+     * Debug: log which arena/map started and which players are in each team.
+     */
+    private void logArenaStart() {
+        StringBuilder teamsInfo = new StringBuilder();
+        for (ITeam team : getTeams()) {
+            if (team.getMembers().isEmpty()) continue;
+            StringBuilder names = new StringBuilder();
+            for (Player member : team.getMembers()) {
+                if (names.length() > 0) names.append(", ");
+                names.append(member.getName());
+            }
+            teamsInfo.append(" | ").append(team.getName()).append(": ").append(names);
+        }
+        plugin.getLogger().info("[Debug] Start areny " + getArenaName() + " (mapa: " + getDisplayName()
+                + ", świat: " + getWorldName() + ", grupa: " + getGroup() + ") - graczy: "
+                + getPlayers().size() + "/" + getMaxPlayers() + teamsInfo);
+    }
+
+    /**
      * Set game status without starting stats.
      */
     public void setStatus(GameState status) {
@@ -1514,6 +1533,8 @@ public class Arena implements IArena {
 
             // Initialize game stats
             getPlayers().forEach(gameStats::init);
+
+            logArenaStart();
         }
 
         //Stop active tasks to prevent issues

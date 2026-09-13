@@ -1,6 +1,7 @@
 package com.andrei1058.bedwars.popuptower;
 
 import com.andrei1058.bedwars.BedWars;
+import com.andrei1058.bedwars.api.arena.GameState;
 import com.andrei1058.bedwars.api.arena.IArena; // Dodano import
 import com.andrei1058.bedwars.api.arena.team.TeamColor;
 import com.andrei1058.bedwars.api.region.Region;
@@ -18,18 +19,23 @@ public class NewPlaceBlock {
             
             // POPRAWKA: Pobieramy arenę do zmiennej i sprawdzamy, czy nie jest nullem
             IArena arena = Arena.getArenaByPlayer(p);
-            if (arena == null) {
-                return; // Jeśli gracz nie jest już na arenie, przerywamy stawianie bloku
+            if (arena == null || arena.getStatus() != GameState.playing) {
+                return; // Gracz nie jest już na arenie albo gra się skończyła - nie stawiamy bloku
             }
 
             for (Region r : arena.getRegionsList()) // Używamy zmiennej 'arena' zamiast ponownego pobierania
                 if (r.isInRegion(b.getRelative(x, y, z).getLocation()))
                     return;
 
-            if (!ladder)
-                BedWars.nms.placeTowerBlocks(b, arena, color, x, y, z);
-            else
-                BedWars.nms.placeLadder(b, x, y, z, arena, ladderdata);
+            // Wyjątek tutaj zatrzymywał licznik wieży, przez co task powtarzał ten sam blok co tick w nieskończoność
+            try {
+                if (!ladder)
+                    BedWars.nms.placeTowerBlocks(b, arena, color, x, y, z);
+                else
+                    BedWars.nms.placeLadder(b, x, y, z, arena, ladderdata);
+            } catch (Exception ex) {
+                BedWars.plugin.getLogger().warning("Popup tower: nie udalo sie postawic bloku (" + xyz + ") na arenie " + arena.getArenaName() + ": " + ex);
+            }
         }
 
     }
