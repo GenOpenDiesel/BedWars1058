@@ -85,7 +85,10 @@ public class TeleporterGUI {
         int playerCount = arena.getPlayers().size();
         int size = (playerCount % 9) == 0 ? playerCount : ((int) Math.ceil(playerCount / 9.0)) * 9;
 
-        if (size > 54) {
+        // Inventory size must be 9..54; with no players left it was 0 and createInventory threw.
+        if (size < 9) {
+            size = 9;
+        } else if (size > 54) {
             size = 54;
         }
 

@@ -798,26 +798,18 @@ public class v1_19_R2 extends VersionSupport {
     @Override
     public void placeLadder(@NotNull Block b, int x, int y, int z, @NotNull IArena a, int ladderData){
         Block block = b.getRelative(x,y,z);  //ladder block
-        block.setType(Material.LADDER);
-        Ladder ladder = (Ladder) block.getBlockData();
-        a.addPlacedBlock(block);
+        // Build the data first instead of casting getBlockData() after setType: when the block
+        // did not end up as a ladder the cast threw and the pop-up tower task retried it every tick.
+        Ladder ladder = (Ladder) Material.LADDER.createBlockData();
         switch (ladderData) {
-            case 2 -> {
-                ladder.setFacing(BlockFace.NORTH);
-                block.setBlockData(ladder);
-            }
-            case 3 -> {
-                ladder.setFacing(BlockFace.SOUTH);
-                block.setBlockData(ladder);
-            }
-            case 4 -> {
-                ladder.setFacing(BlockFace.WEST);
-                block.setBlockData(ladder);
-            }
-            case 5 -> {
-                ladder.setFacing(BlockFace.EAST);
-                block.setBlockData(ladder);
-            }
+            case 2 -> ladder.setFacing(BlockFace.NORTH);
+            case 3 -> ladder.setFacing(BlockFace.SOUTH);
+            case 4 -> ladder.setFacing(BlockFace.WEST);
+            case 5 -> ladder.setFacing(BlockFace.EAST);
+        }
+        block.setBlockData(ladder, false);
+        if (block.getType() == Material.LADDER) {
+            a.addPlacedBlock(block);
         }
     }
 

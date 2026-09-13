@@ -336,7 +336,9 @@ public class Misc {
     }
 
     public static String replaceStatsPlaceholders(Player player, @NotNull String s, boolean papiReplacements) {
-        return replaceStatsPlaceholders(player, BedWars.getStatsManager().get(player.getUniqueId()), player, s, papiReplacements);
+        PlayerStats stats = BedWars.getStatsManager().getUnsafe(player.getUniqueId());
+        if (stats == null) return s;
+        return replaceStatsPlaceholders(player, stats, player, s, papiReplacements);
     }
 
     /**
