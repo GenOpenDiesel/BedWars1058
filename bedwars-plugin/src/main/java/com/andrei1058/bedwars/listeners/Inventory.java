@@ -30,6 +30,7 @@ import com.andrei1058.bedwars.api.server.ServerType;
 import com.andrei1058.bedwars.api.server.SetupType;
 import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.SetupSession;
+import com.andrei1058.bedwars.stats.StatsGUIHolder;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -38,6 +39,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
@@ -125,7 +127,18 @@ public class Inventory implements Listener {
     }
 
     @EventHandler
+    public void onStatsGUIDrag(InventoryDragEvent e) {
+        if (e.getView().getTopInventory().getHolder() instanceof StatsGUIHolder) e.setCancelled(true);
+    }
+
+    @EventHandler
     public void onClick(InventoryClickEvent e) {
+
+        //stats GUI is read-only (own or someone else's)
+        if (e.getView().getTopInventory().getHolder() instanceof StatsGUIHolder) {
+            e.setCancelled(true);
+            return;
+        }
 
         //issue #225
         if (e.getSlotType() == InventoryType.SlotType.ARMOR) {
