@@ -240,6 +240,37 @@ public class MySQL implements Database {
     }
 
     @Override
+    public PlayerStats fetchStatsByName(String name) {
+        String sql = "SELECT uuid, name FROM global_stats WHERE name = ? ORDER BY last_play DESC LIMIT 1;";
+        String uuid = null, realName = null;
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, name);
+                try (ResultSet result = statement.executeQuery()) {
+                    if (result.next()) {
+                        uuid = result.getString(1);
+                        realName = result.getString(2);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return statsWithName(uuid, realName);
+    }
+
+    private PlayerStats statsWithName(String uuid, String name) {
+        if (uuid == null) return null;
+        try {
+            PlayerStats stats = fetchStats(UUID.fromString(uuid));
+            stats.setName(name);
+            return stats;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    @Override
     public void setQuickBuySlot(UUID uuid, String shopPath, int slot) {
         String sql = "SELECT uuid FROM quick_buy_2 WHERE uuid = ?;";
         try (Connection connection = dataSource.getConnection()) {

@@ -21,6 +21,7 @@
 package com.andrei1058.bedwars.support.papi;
 
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -33,6 +34,10 @@ public class SupportPAPI {
         String replace(Player p, String s);
 
         List<String> replace(Player p, List<String> strings);
+
+        default String replaceOffline(OfflinePlayer p, String s) {
+            return s;
+        }
     }
 
     public static class noPAPI implements supp {
@@ -58,6 +63,11 @@ public class SupportPAPI {
         @Override
         public List<String> replace(Player p, List<String> strings) {
             return PlaceholderAPI.setPlaceholders(p, strings);
+        }
+
+        @Override
+        public String replaceOffline(OfflinePlayer p, String s) {
+            return PlaceholderAPI.setPlaceholders(p, s);
         }
     }
 
