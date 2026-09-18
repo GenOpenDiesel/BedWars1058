@@ -82,7 +82,12 @@ public class CmdStats extends SubCommand {
 
         /* another player: only online ones, their stats are in the cache */
         Player target = Bukkit.getPlayerExact(args[0]);
-        if (target == null || BedWars.getStatsManager().getUnsafe(target.getUniqueId()) == null) {
+        if (target == null) {
+            p.sendMessage(getMsg(p, Messages.COMMAND_PARTY_INVITE_DENIED_PLAYER_OFFLINE)
+                    .replace("{player}", args[0]));
+            return true;
+        }
+        if (BedWars.getStatsManager().getUnsafe(target.getUniqueId()) == null) {
             p.sendMessage(getMsg(p, Messages.COMMAND_TP_PLAYER_NOT_FOUND));
             return true;
         }
