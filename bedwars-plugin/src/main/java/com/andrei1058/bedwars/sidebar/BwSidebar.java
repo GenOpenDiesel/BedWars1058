@@ -279,7 +279,8 @@ public class BwSidebar implements ISidebar {
             providers.add(new PlaceholderProvider("{on}", () ->
                     String.valueOf(Bukkit.getOnlinePlayers().size()))
             );
-            // Stats may not be loaded yet right after join; get() throws in that case.
+            // Stats may not be loaded yet right after join or may already be dropped
+            // if the player quit while a delayed sidebar refresh was still queued.
             PlayerStats persistentStats = BedWars.getStatsManager().getUnsafe(player.getUniqueId());
             if (null != persistentStats) {
                 providers.add(new PlaceholderProvider("{kills}", () ->

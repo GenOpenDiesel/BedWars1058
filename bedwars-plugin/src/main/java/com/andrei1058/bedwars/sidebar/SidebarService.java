@@ -118,6 +118,13 @@ public class SidebarService implements ISidebarService {
     }
 
     public void giveSidebar(@NotNull Player player, @Nullable IArena arena, boolean delay) {
+        // never build a sidebar for an offline player: their caches (stats, level,
+        // language) may already be gone and we'd only leak the instance anyway
+        if (!player.isOnline()) {
+            this.remove(player);
+            return;
+        }
+
         BwSidebar sidebar = sidebars.getOrDefault(player.getUniqueId(), null);
 
         // check if we might need to remove the existing sidebar
