@@ -47,13 +47,6 @@ public interface Database {
     PlayerStats fetchStats(UUID uuid);
 
     /**
-     * Fetch stats by the last known player name (case-insensitive).
-     *
-     * @return null if there is no player with this name in the database.
-     */
-    PlayerStats fetchStatsByName(String name);
-
-    /**
      * Set quick buy slot value.
      */
     @Deprecated

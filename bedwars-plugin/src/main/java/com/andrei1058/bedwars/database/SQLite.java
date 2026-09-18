@@ -198,35 +198,6 @@ public class SQLite implements Database {
     }
 
     @Override
-    public PlayerStats fetchStatsByName(String name) {
-        String sql = "SELECT uuid, name FROM global_stats WHERE name = ? COLLATE NOCASE ORDER BY last_play DESC LIMIT 1;";
-        String uuid = null, realName = null;
-        try {
-            checkConnection();
-
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, name);
-                try (ResultSet result = statement.executeQuery()) {
-                    if (result.next()) {
-                        uuid = result.getString(1);
-                        realName = result.getString(2);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        if (uuid == null) return null;
-        try {
-            PlayerStats stats = fetchStats(UUID.fromString(uuid));
-            stats.setName(realName);
-            return stats;
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    @Override
     public void setQuickBuySlot(UUID p, String shopPath, int slot) {
         try {
             checkConnection();

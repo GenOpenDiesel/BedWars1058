@@ -30,7 +30,6 @@ import com.andrei1058.bedwars.arena.Arena;
 import com.andrei1058.bedwars.arena.Misc;
 import com.andrei1058.bedwars.arena.SetupSession;
 import com.andrei1058.bedwars.commands.bedwars.MainCommand;
-import com.andrei1058.bedwars.stats.PlayerStats;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -81,23 +80,13 @@ public class CmdStats extends SubCommand {
             return true;
         }
 
-        /* another player: cached stats if online here, otherwise look the name up in the database */
+        /* another player: only online ones, their stats are in the cache */
         Player target = Bukkit.getPlayerExact(args[0]);
-        if (target != null && BedWars.getStatsManager().getUnsafe(target.getUniqueId()) != null) {
-            Misc.openStatsGUI(p, null, target);
+        if (target == null || BedWars.getStatsManager().getUnsafe(target.getUniqueId()) == null) {
+            p.sendMessage(getMsg(p, Messages.COMMAND_TP_PLAYER_NOT_FOUND));
             return true;
         }
-        String name = args[0];
-        Bukkit.getScheduler().runTaskAsynchronously(BedWars.plugin, () -> {
-            PlayerStats stats = BedWars.getRemoteDatabase().fetchStatsByName(name);
-            if (stats == null) {
-                Bukkit.getScheduler().runTask(BedWars.plugin, () -> {
-                    if (p.isOnline()) p.sendMessage(getMsg(p, Messages.COMMAND_TP_PLAYER_NOT_FOUND));
-                });
-                return;
-            }
-            Misc.openStatsGUI(p, stats, null);
-        });
+        Misc.openStatsGUI(p, target);
         return true;
     }
 
