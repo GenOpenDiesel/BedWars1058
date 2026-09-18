@@ -292,28 +292,24 @@ public class Misc {
      * open stats GUI to player
      */
     public static void openStatsGUI(Player p) {
-        openStatsGUI(p, null, p);
+        openStatsGUI(p, p);
     }
 
     /**
-     * open stats GUI of another player to viewer
-     *
-     * @param stats        target's stats, null to read the online target's cached stats
-     * @param onlineTarget target if online, null when stats were fetched from the database
+     * open stats GUI of an online player (target) to viewer (p)
      */
-    public static void openStatsGUI(Player p, @Nullable PlayerStats stats, @Nullable Player onlineTarget) {
+    public static void openStatsGUI(Player p, Player target) {
 
         Bukkit.getScheduler().runTask(plugin, () -> {
 
             /* stats cache is dropped on quit, so don't build the GUI for someone who already left */
-            if (!p.isOnline()) return;
-            if (onlineTarget != null && !onlineTarget.isOnline()) return;
-            PlayerStats targetStats = stats != null ? stats : BedWars.getStatsManager().getUnsafe(onlineTarget.getUniqueId());
+            if (!p.isOnline() || !target.isOnline()) return;
+            PlayerStats targetStats = BedWars.getStatsManager().getUnsafe(target.getUniqueId());
             if (targetStats == null) return;
 
             /* create inventory */
             StatsGUIHolder holder = new StatsGUIHolder();
-            Inventory inv = Bukkit.createInventory(holder, config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_GUI_SIZE), replaceStatsPlaceholders(p, targetStats, onlineTarget, getMsg(p, Messages.PLAYER_STATS_GUI_INV_NAME), true));
+            Inventory inv = Bukkit.createInventory(holder, config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_GUI_SIZE), replaceStatsPlaceholders(p, targetStats, target, getMsg(p, Messages.PLAYER_STATS_GUI_INV_NAME), true));
             holder.setInventory(inv);
 
             /* add custom items to gui */
@@ -324,10 +320,10 @@ public class Misc {
                 ItemStack i = nms.createItemStack(config.getYml().getString(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_MATERIAL.replace("%path%", s)).toUpperCase(), 1, (short) config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_DATA.replace("%path%", s)));
                 ItemMeta im = i.getItemMeta();
                 im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                im.setDisplayName(replaceStatsPlaceholders(p, targetStats, onlineTarget, getMsg(p, Messages.PLAYER_STATS_GUI_PATH + "-" + s + "-name"), true));
+                im.setDisplayName(replaceStatsPlaceholders(p, targetStats, target, getMsg(p, Messages.PLAYER_STATS_GUI_PATH + "-" + s + "-name"), true));
                 List<String> lore = new ArrayList<>();
                 for (String string : getList(p, Messages.PLAYER_STATS_GUI_PATH + "-" + s + "-lore")) {
-                    lore.add(replaceStatsPlaceholders(p, targetStats, onlineTarget, string, true));
+                    lore.add(replaceStatsPlaceholders(p, targetStats, target, string, true));
                 }
                 im.setLore(lore);
                 i.setItemMeta(im);
@@ -344,11 +340,11 @@ public class Misc {
     }
 
     /**
-     * @param player       viewer, used for language/date format
-     * @param stats        whose stats to show
-     * @param onlineTarget owner of the stats if online, null for an offline lookup
+     * @param player viewer, used for language/date format
+     * @param stats  target's stats
+     * @param target owner of the stats
      */
-    public static String replaceStatsPlaceholders(Player player, PlayerStats stats, @Nullable Player onlineTarget, @NotNull String s, boolean papiReplacements) {
+    public static String replaceStatsPlaceholders(Player player, PlayerStats stats, Player target, @NotNull String s, boolean papiReplacements) {
         if (s.contains("{kills}"))
             s = s.replace("{kills}", String.valueOf(stats.getKills()));
         if (s.contains("{deaths}"))
@@ -369,14 +365,11 @@ public class Misc {
             s = s.replace("{firstPlay}", new SimpleDateFormat(getMsg(player, Messages.FORMATTING_STATS_DATE_FORMAT)).format(stats.getFirstPlay() != null ? Timestamp.from(stats.getFirstPlay()) : Timestamp.from(Instant.now())));
         if (s.contains("{lastPlay}"))
             s = s.replace("{lastPlay}", new SimpleDateFormat(getMsg(player, Messages.FORMATTING_STATS_DATE_FORMAT)).format(stats.getLastPlay() != null ? Timestamp.from(stats.getLastPlay()) : Timestamp.from(Instant.now())));
-        String name = onlineTarget != null ? onlineTarget.getName() : String.valueOf(stats.getName());
-        if (s.contains("{player}")) s = s.replace("{player}", onlineTarget != null ? onlineTarget.getDisplayName() : name);
-        if (s.contains("{playername")) s = s.replace("{playername}", name);
-        if (s.contains("{prefix}")) s = s.replace("{prefix}", onlineTarget != null ? BedWars.getChatSupport().getPrefix(onlineTarget) : "");
+        if (s.contains("{player}")) s = s.replace("{player}", target.getDisplayName());
+        if (s.contains("{playername")) s = s.replace("{playername}", target.getName());
+        if (s.contains("{prefix}")) s = s.replace("{prefix}", BedWars.getChatSupport().getPrefix(target));
 
-        if (!papiReplacements) return s;
-        return onlineTarget != null ? SupportPAPI.getSupportPAPI().replace(onlineTarget, s)
-                : SupportPAPI.getSupportPAPI().replaceOffline(Bukkit.getOfflinePlayer(stats.getUuid()), s);
+        return papiReplacements ? SupportPAPI.getSupportPAPI().replace(target, s) : s;
     }
 
     public static boolean isNumber(String s) {
