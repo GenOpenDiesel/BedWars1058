@@ -926,6 +926,8 @@ public class Arena implements IArena {
 
         if (!BedWars.isShuttingDown()) {
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+                // the player may have disconnected during these 5 ticks
+                if (!p.isOnline()) return;
                 for (Player on : Bukkit.getOnlinePlayers()) {
                     if (on.equals(p)) continue;
                     if (getArenaByPlayer(on) == null) {
@@ -1067,6 +1069,8 @@ public class Arena implements IArena {
 
         if (!BedWars.isShuttingDown()) {
             Bukkit.getScheduler().runTask(plugin, () -> {
+                // the player may have disconnected before this task ran
+                if (!p.isOnline()) return;
                 for (Player on : Bukkit.getOnlinePlayers()) {
                     if (on.equals(p)) continue;
                     if (getArenaByPlayer(on) == null) {
