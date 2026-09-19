@@ -73,6 +73,7 @@ public class Persian extends Language {
         yml.addDefault(Messages.COMMAND_JOIN_SPECTATOR_MSG, "{prefix}§6Shoma darhale spectate kardan §9{arena} §6hastid.\n{prefix}§eBaraye kharej shodan az arena az §c/leave §eestefade konid.");
         yml.addDefault(Messages.COMMAND_JOIN_SPECTATOR_DENIED_MSG, "&cEmkan vared shodan spectator be in arena vojood nadarad!");
         yml.addDefault(Messages.COMMAND_TP_PLAYER_NOT_FOUND, "{prefix}&cPlayer peida nashod!");
+        yml.addDefault(Messages.COMMAND_STATS_PLAYER_NOT_ONLINE, "{prefix}&cThere is no such player online!");
         yml.addDefault(Messages.COMMAND_TP_NOT_IN_ARENA, "{prefix}&cIn player dar yek arena bedwars nist!");
         yml.addDefault(Messages.COMMAND_TP_NOT_STARTED, "{prefix}&cArena i ke player dakhelesh hast hanooz start nashode!");
         yml.addDefault(Messages.COMMAND_TP_USAGE, "{prefix}&cRavesh estefade: /bw tp <username>");

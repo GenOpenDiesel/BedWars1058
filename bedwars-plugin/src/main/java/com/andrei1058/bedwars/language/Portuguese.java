@@ -71,6 +71,7 @@ public class Portuguese extends Language {
         yml.addDefault(Messages.COMMAND_JOIN_SPECTATOR_MSG, "{prefix}§6Você agora está assistindo §9{arena}§6.\n{prefix}§eVocê pode sair da arena a qualquer momento com §c/leave§e.");
         yml.addDefault(Messages.COMMAND_JOIN_SPECTATOR_DENIED_MSG, "&cEspectadores não são permitidos nesta arena!");
         yml.addDefault(Messages.COMMAND_TP_PLAYER_NOT_FOUND, "{prefix}&cJogador não encontrado!");
+        yml.addDefault(Messages.COMMAND_STATS_PLAYER_NOT_ONLINE, "{prefix}&cThere is no such player online!");
         yml.addDefault(Messages.COMMAND_TP_NOT_IN_ARENA, "{prefix}&cEste jogador não está em uma arena de bedwars!");
         yml.addDefault(Messages.COMMAND_TP_NOT_STARTED, "{prefix}&cA arena onde o jogador está ainda não começou!");
         yml.addDefault(Messages.COMMAND_TP_USAGE, "{prefix}&cUse: /bw tp <player>");
